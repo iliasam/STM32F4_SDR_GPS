@@ -1026,6 +1026,9 @@
       <name>$PROJ_DIR$\..\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\signal_capture.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\simulator.c</name>
     </file>
     <file>

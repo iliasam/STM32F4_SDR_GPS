@@ -1,3 +1,8 @@
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
+
+#define CPU_TICKS_US            (168)
 
 // 8*8=64MHz
 //#define MCU_CLK_MULTIPLIER      RCC_PLLMul_8
@@ -6,6 +11,7 @@
 #define SPI_PRESCALER           SPI_BaudRatePrescaler_4
 #define SPI_DMA_STREAM          DMA1_Stream3
 #define SPI_DMA_CH              DMA_Channel_0
+#define SPI_DMA_IRQ             DMA1_Stream3_IRQn
 #define SPI_IRQ_HANDLER         DMA1_Stream3_IRQHandler
 
 #define SPI_GPIO_CLK            RCC_AHB1Periph_GPIOB
@@ -18,8 +24,8 @@
 
 #define SIM_PRN_CODE            1
 
-#define IF_FREQ_HZ              (int)(4096000 + 0000)
-#define SPI_BAUDRATE_HZ         (int)(16384000)
+#define IF_FREQ_HZ              (int)(4092000)
+#define SPI_BAUDRATE_HZ         (int)(16368000)
 #define PRN_SPEED_HZ            1000 //1ms period
 #define BITS_IN_PRN             (SPI_BAUDRATE_HZ / PRN_SPEED_HZ) //16Kbit
 #define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 words
@@ -28,4 +34,7 @@
 //--------------------------
 #define LED4_PIN                         GPIO_Pin_12
 #define LED4_GPIO_PORT                   GPIOD
+
+
+#endif //_CONFIG_H
 

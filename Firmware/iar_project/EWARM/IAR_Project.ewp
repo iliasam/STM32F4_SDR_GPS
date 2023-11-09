@@ -1014,6 +1014,12 @@
   <group>
     <name>User</name>
     <file>
+      <name>$PROJ_DIR$\..\acquisition.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\common_ram.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\config.h</name>
     </file>
     <file>

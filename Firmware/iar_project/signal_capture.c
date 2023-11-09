@@ -3,30 +3,53 @@
 #include "string.h"
 #include "stdlib.h"
 #include "stm32f4xx.h"
+#include "delay_us_timer.h"
 #include "config.h"
 
-#define DUMMY_Address         0x20000000
+//Circular buffer, updated by DMA in realtime
+volatile uint16_t spi_rx_buffer[PRN_SPI_WORDS_CNT * 2];
+//Software can read from this poiner
+volatile uint16_t* spi_curr_ready_rx_buf = &spi_rx_buffer[PRN_SPI_WORDS_CNT];
 
-uint16_t spi_rx_buffer[PRN_SPI_WORDS_CNT * 2];
+// TMP buffer for long processing
+uint16_t spi_rx_copy_buffer[PRN_SPI_WORDS_CNT];
+
+uint8_t signal_capture_need_copy_flag = 0;
+volatile uint8_t signal_capture_irq_unprocessed_flag = 0;
+//1 packet = 1s, ~1 PRN
+volatile uint32_t signal_capture_packet_cnt = 0;
+volatile uint32_t signal_capture_irq_timestamp = 0;//DWT timer
+
+volatile uint16_t test_cnt = 0;
 
 void init_spi(void);
 void init_dma(void);
 
 //************************************************************************
 
+uint8_t* signal_capture_get_copy_buf(void)
+{
+  return (uint8_t*)spi_rx_copy_buffer;
+}
+
 void SPI_IRQ_HANDLER(void)
 {
   if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_HTIF3))
   {
     DMA_ClearFlag(SPI_DMA_STREAM, DMA_FLAG_HTIF3);
+    spi_curr_ready_rx_buf = &spi_rx_buffer[0];
   }
   
   if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_TCIF3))
   {
     DMA_ClearFlag(SPI_DMA_STREAM, DMA_FLAG_TCIF3);
+    spi_curr_ready_rx_buf = &spi_rx_buffer[PRN_SPI_WORDS_CNT];
   }
   
   LED4_GPIO_PORT->ODR ^= LED4_PIN;
+  signal_capture_packet_cnt++;
+  signal_capture_irq_timestamp = get_dwt_value();
+  signal_capture_irq_unprocessed_flag = 1;
 }
 
 void signal_capture_init(void)
@@ -42,6 +65,49 @@ void signal_capture_init(void)
   GPIO_InitStruct.GPIO_Speed = GPIO_Speed_25MHz;
   GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
   GPIO_Init(LED4_GPIO_PORT, &GPIO_InitStruct);
+}
+
+//Must be called periodically
+void signal_capture_handling(void)
+{
+  if (signal_capture_irq_unprocessed_flag == 0)
+  {
+    return;
+  }
+    
+  if (signal_capture_need_copy_flag)
+  {
+    uint32_t time_now = get_dwt_value();
+    uint32_t time_diff = time_now - signal_capture_irq_timestamp;
+    time_diff = time_diff / CPU_TICKS_US;//convert to us
+    if (time_diff > 900)
+      return; //to much time from IRQ, possibly do not have time to copy
+    
+    NVIC_DisableIRQ(SPI_DMA_IRQ);
+    memcpy(spi_rx_copy_buffer, 
+           (void*)spi_curr_ready_rx_buf, 
+           sizeof(spi_rx_copy_buffer));
+    test_cnt++;
+    signal_capture_need_copy_flag = 0;
+    signal_capture_irq_unprocessed_flag = 0;
+    NVIC_EnableIRQ(SPI_DMA_IRQ);
+  }
+}
+
+uint8_t signal_capture_have_irq(void)
+{
+  return signal_capture_irq_unprocessed_flag;
+}
+
+//Called by external code
+void signal_capture_need_data_copy(void)
+{
+  signal_capture_need_copy_flag = 1;
+}
+
+uint8_t signal_capture_check_copied(void)
+{
+  return (signal_capture_need_copy_flag == 0);
 }
 
 void init_spi(void)
@@ -109,7 +175,7 @@ void init_dma(void)
   DMA_ITConfig(SPI_DMA_STREAM, DMA_IT_TC, ENABLE);
   
   NVIC_InitTypeDef NVIC_InitStructure;
-  NVIC_InitStructure.NVIC_IRQChannel = DMA1_Stream3_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannel = SPI_DMA_IRQ;
   NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;

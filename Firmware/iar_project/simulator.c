@@ -44,8 +44,11 @@ void sim_add_noise(uint16_t* buff_p, uint8_t noise_level)
   for (uint16_t word_cnt = 0; word_cnt < PRN_SPI_WORDS_CNT; word_cnt++)//1000
   {
     if (noise_cnt < noise_level)
-      buff_p[word_cnt] = 0x3333;//4MHz signal
-    
+    {
+      //buff_p[word_cnt] = 0x3333;//4MHz signal
+      buff_p[word_cnt] = (uint16_t)(rand() & 0xFFFF);
+    }
+   
     noise_cnt++;
     if (noise_cnt >= MAX_NOISE_VAL)
       noise_cnt = 0;
@@ -86,7 +89,7 @@ uint16_t* sim_generate_data(void)
   uint16_t word_cnt = 0;
   
   /// Period in SPI bits
-  double period = (double)SPI_BAUDRATE_HZ / (double)IF_FREQ_HZ;
+  double period = (double)SPI_BAUDRATE_HZ / ((double)IF_FREQ_HZ + 2000);
   double threshold = period / 2;
   if  (period < 0.0f)
     return spi_tx_array;
@@ -111,7 +114,7 @@ uint16_t* sim_generate_data(void)
   
 
   // Fill two constant buffers
-  float period_prn = (float)BITS_IN_PRN / (float)PRN_LENGTH; //~15bits
+  float period_prn = (float)BITS_IN_PRN / (float)PRN_LENGTH;
   total_bit_cnt = 0;
   for (word_cnt = 0; word_cnt < PRN_SPI_WORDS_CNT; word_cnt++)
   {

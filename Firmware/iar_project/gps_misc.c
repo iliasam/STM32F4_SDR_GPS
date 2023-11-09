@@ -4,19 +4,13 @@
 #include <math.h>
 #include "delay_us_timer.h"
 #include "intrinsics.h"
+#include "common_ram.h"
 
 volatile static uint32_t diff;
 
 uint8_t gps_summ_table[256];
 
 uint8_t gps_summ_table16[65536];
-
-uint16_t tmp_sin_data[PRN_SPI_WORDS_CNT];
-uint16_t tmp_cos_data[PRN_SPI_WORDS_CNT];
-
-//Tmp correlation results
-uint16_t tmp_corr_i[PRN_SPI_WORDS_CNT];
-uint16_t tmp_corr_q[PRN_SPI_WORDS_CNT];
 
 uint8_t gps_summ16(uint16_t data);
 uint16_t gps_buff_summ16(uint16_t* data, uint16_t length);
@@ -74,59 +68,59 @@ uint8_t gps_check_bit16(uint16_t* ptr, uint8_t pos)
 
 void gps_generate_sin(uint16_t* ptr, uint16_t length, float freq_hz)
 {
-	//SPI is LSB first
-	uint32_t total_bit_cnt = 0;
-	uint16_t word_cnt = 0;
-
-	/// Period in SPI bits
-	double period = (double)SPI_BAUDRATE_HZ / freq_hz;
-	double threshold = period / 2;
-	if (period < 0.0f)
-		return;
-
-	for (word_cnt = 0; word_cnt < length; word_cnt++)
-	{
-		uint16_t word_value = 0;
-		for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
-		{
-			word_value = word_value >> 1;
-			uint32_t div1 = (uint32_t)((double)total_bit_cnt / period);
-			double zone = (double)total_bit_cnt - ((double)div1 * period); //=bit_cnt % period
-			if (zone < threshold)
-				word_value |= 0x8000;
-			total_bit_cnt++;
-		}
-		ptr[word_cnt] = word_value;
-	}
+  //SPI is LSB first
+  uint32_t total_bit_cnt = 0;
+  uint16_t word_cnt = 0;
+  
+  /// Period in SPI bits
+  double period = (double)SPI_BAUDRATE_HZ / freq_hz;
+  double threshold = period / 2;
+  if (period < 0.0f)
+    return;
+  
+  for (word_cnt = 0; word_cnt < length; word_cnt++)
+  {
+    uint16_t word_value = 0;
+    for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
+    {
+      word_value = word_value >> 1;
+      uint32_t div1 = (uint32_t)((double)total_bit_cnt / period);
+      double zone = (double)total_bit_cnt - ((double)div1 * period); //=bit_cnt % period
+      if (zone < threshold)
+        word_value |= 0x8000;
+      total_bit_cnt++;
+    }
+    ptr[word_cnt] = word_value;
+  }
 }
 
 void gps_generate_cos(uint16_t* ptr, uint16_t length, float freq_hz)
 {
-	//SPI is LSB first
-	uint32_t total_bit_cnt = 0;
-	uint16_t word_cnt = 0;
-
-	/// Period in SPI bits
-	double period = (double)SPI_BAUDRATE_HZ / freq_hz;
-	double threshold = period / 4;
-	double threshold2 = period - threshold;
-	if (period < 0.0f)
-		return;
-
-	for (word_cnt = 0; word_cnt < length; word_cnt++)
-	{
-		uint16_t word_value = 0;
-		for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
-		{
-			word_value = word_value >> 1;
-			uint32_t div1 = (uint32_t)((double)total_bit_cnt / period);
-			double zone = (double)total_bit_cnt - ((double)div1 * period); //=bit_cnt % period
-			if ((zone < threshold) || (zone >= threshold2))
-				word_value |= 0x8000;
-			total_bit_cnt++;
-		}
-		ptr[word_cnt] = word_value;
-	}
+  //SPI is LSB first
+  uint32_t total_bit_cnt = 0;
+  uint16_t word_cnt = 0;
+  
+  /// Period in SPI bits
+  double period = (double)SPI_BAUDRATE_HZ / freq_hz;
+  double threshold = period / 4;
+  double threshold2 = period - threshold;
+  if (period < 0.0f)
+    return;
+  
+  for (word_cnt = 0; word_cnt < length; word_cnt++)
+  {
+    uint16_t word_value = 0;
+    for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
+    {
+      word_value = word_value >> 1;
+      uint32_t div1 = (uint32_t)((double)total_bit_cnt / period);
+      double zone = (double)total_bit_cnt - ((double)div1 * period); //=bit_cnt % period
+      if ((zone < threshold) || (zone >= threshold2))
+        word_value |= 0x8000;
+      total_bit_cnt++;
+    }
+    ptr[word_cnt] = word_value;
+  }
 }
 
 void gps_mult8(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset)
@@ -296,8 +290,7 @@ int16_t gps_correlation8(
 
 uint16_t correlation_search(uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t* aver_val)
 {
-  
-  uint32_t start_t = get_dwt_value();
+  //uint32_t start_t = get_dwt_value();
   
   //uint16_t max_correl_pos = 0;
   uint16_t max_correl_val = 0;
@@ -321,10 +314,9 @@ uint16_t correlation_search(uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q,
 
   *aver_val = (uint16_t)total_summ;
   
-  uint32_t stop_t = get_dwt_value();
-  
-  diff = stop_t - start_t;
-  diff = diff / 168;
+  //uint32_t stop_t = get_dwt_value();
+  //diff = stop_t - start_t;
+  //diff = diff / 168;
   
   return max_correl_val;
 }

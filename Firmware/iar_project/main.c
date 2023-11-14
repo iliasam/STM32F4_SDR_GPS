@@ -39,7 +39,7 @@ int main(void)
   gps_fill_summ_table();
   
   memset(&gps_channel1, 0, sizeof(gps_channel1));
-  gps_channel1.prn = 1;
+  gps_channel1.prn = 13;
   
   delay_ms(100);
   signal_capture_init();
@@ -49,12 +49,13 @@ int main(void)
   sim_add_noise(signal_p, 45);
   gps_generate_prn_data(tmp_prn_data, 1);
   
-  //uint16_t tmp_val;
-  //correlation_search(tmp_prn_data, tmp_data_i, tmp_data_q, &tmp_val);
-  
+  uint16_t tmp_val;
+  correlation_search(tmp_prn_data, tmp_data_i, tmp_data_q, &tmp_val);
   */
- 
+  
+  
   signal_capture_need_data_copy();
+  
   while(1)
   {
     uint8_t have_data = signal_capture_check_copied();
@@ -75,7 +76,6 @@ int main(void)
       gps_new_data_handling();
       signal_capture_need_data_copy();
     }
-    
   }//end of while(1)
   
 }//end of main()

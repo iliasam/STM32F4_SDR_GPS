@@ -238,48 +238,67 @@ uint16_t gps_buff_summ16(uint16_t* data, uint16_t length)
   return cnt;
 }
 
-
-int16_t gps_correlation_test(
-  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t* corr1, uint16_t* corr2, uint16_t offset)
+void gps_mult_and_summ(
+    uint8_t* src_i, uint8_t* src_q, uint8_t* src2, 
+    uint16_t* summ_i, uint16_t* summ_q, uint16_t length, uint16_t offset)
 {
-  uint32_t start_t = get_dwt_value();
+  uint16_t* src2_p16 = (uint16_t*)src2;
   
-  //Correllaton
-  gps_mult_iq32((uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
-               (uint8_t*)corr1, (uint8_t*)corr2, PRN_SPI_WORDS_CNT*2, offset);
+  uint16_t* src_i_p16 = (uint16_t*)(src_i + offset);
+  uint16_t* src_q_p16 = (uint16_t*)(src_q + offset);
   
-  //Integrate
-  int16_t summ1 = gps_buff_summ16(corr1, PRN_SPI_WORDS_CNT*2) - BITS_IN_PRN / 2;
-  int16_t summ2 = gps_buff_summ16(corr2, PRN_SPI_WORDS_CNT*2) - BITS_IN_PRN / 2;
+  uint16_t length_words_p1 = (length - offset) / 2;
   
-  if (summ1 < 0)
-    summ1 = 0;
+  uint16_t tmp_i, tmp_q;
   
-  if (summ2 < 0)
-    summ2 = 0;
+  uint16_t cnt_i = 0;
+  uint16_t cnt_q = 0;
   
-  int32_t summ1S = summ1 * summ1;
-  int32_t summ2S = summ2 * summ2;
-
-  int16_t corr_res = (int16_t)sqrtf((float)summ1S + (float)summ2S);
-  uint32_t stop_t = get_dwt_value();
+  for (uint16_t i = 0; i < length_words_p1; i++)
+  {
+    tmp_i = (*src_i_p16) ^ src2_p16[i];
+    src_i_p16++;
+    tmp_q = (*src_i_p16) ^ src2_p16[i];
+    src_q_p16++;
+    cnt_i += gps_summ_table16[tmp_i];
+    cnt_q += gps_summ_table16[tmp_q];
+  }
   
-  diff = stop_t - start_t;
-  diff = diff / 168;
+  //reset to start of buffer
+  src_i_p16 = (uint16_t*)(src_i);
+  src_q_p16 = (uint16_t*)(src_q);
   
-  return corr_res;
+  for (uint16_t i = length_words_p1; i < (length / 2); i++)
+  {
+    tmp_i = (*src_i_p16) ^ src2_p16[i];
+    src_i_p16++;
+    tmp_q = (*src_i_p16) ^ src2_p16[i];
+    src_q_p16++;
+    cnt_i += gps_summ_table16[tmp_i];
+    cnt_q += gps_summ_table16[tmp_q];
+  }
+  
+  *summ_i = cnt_i;
+  *summ_q = cnt_q;
 }
 
 int16_t gps_correlation8(
-  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t* corr1, uint16_t* corr2, uint16_t offset)
-{
-  //Correllaton
-  gps_mult_iq32((uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
-               (uint8_t*)corr1, (uint8_t*)corr2, PRN_SPI_WORDS_CNT*2, offset);
+  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset)
+{ 
+  int16_t summ1;
+  int16_t summ2;
   
-  //Integrate
-  int16_t summ1 = gps_buff_summ16(corr1, PRN_SPI_WORDS_CNT*2) - BITS_IN_PRN / 2;
-  int16_t summ2 = gps_buff_summ16(corr2, PRN_SPI_WORDS_CNT*2) - BITS_IN_PRN / 2;
+  gps_mult_and_summ(
+                    (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
+                    (uint16_t*)&summ1, (uint16_t*)&summ2, 
+                    PRN_SPI_WORDS_CNT * 2, offset);
+  summ1 = summ1 - BITS_IN_PRN / 2;
+  summ2 = summ2 - BITS_IN_PRN / 2;
+  
+  if (summ1 < 0)
+    summ1 = 0;
+  if (summ2 < 0)
+    summ2 = 0;
 
   int32_t summ1S = summ1 * summ1;
   int32_t summ2S = summ2 * summ2;
@@ -299,8 +318,7 @@ uint16_t correlation_search(uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q,
   
   for (uint16_t offset = 0; offset < (PRN_LENGTH * 2); offset++)
   {
-    int16_t corr_res = gps_correlation8(
-      prn_p, data_i, data_q, tmp_corr_i, tmp_corr_q, offset);
+    int16_t corr_res = gps_correlation8(prn_p, data_i, data_q, offset);
     
     if (corr_res > max_correl_val)
     {

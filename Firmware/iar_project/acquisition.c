@@ -24,6 +24,7 @@ void acquisition_process_hist(gps_ch_t* channel);
 uint32_t acquisition_hist_find_second(uint32_t max_val);
 uint32_t acquisition_hist_average(uint8_t unique_cnt);
 void acquisition_freq_search(gps_ch_t* channel, uint8_t* data, uint8_t reset_flag);
+uint32_t acquisition_hist_median(uint8_t unique_cnt);
 
 //****************************************************
 
@@ -161,14 +162,22 @@ void acquisition_process_hist(gps_ch_t* channel)
   }
   else if (unique_elements == 2)
   {
-    uint32_t second_val = acquisition_hist_find_second(max_hist_val);
-    float ratio = (float)max_hist_val / (float)second_val;
-    channel->acq_data.hist_ratio = ratio;
+    if (max_hist_val > 2000)
+    {
+      channel->acq_data.hist_ratio = 3.0;
+    }
+    else
+    {
+        uint32_t second_val = acquisition_hist_find_second(max_hist_val);
+        float ratio = (float)max_hist_val / (float)second_val;
+        channel->acq_data.hist_ratio = ratio;
+    }
   }
   else
   {
     //unique_elements > 2
     uint32_t avr_val = acquisition_hist_average(unique_elements);
+    //uint32_t avr_val = acquisition_hist_median(unique_elements);
     float ratio = (float)max_hist_val / (float)avr_val;
     channel->acq_data.hist_ratio = ratio;
   }
@@ -210,6 +219,23 @@ uint32_t* acquisition_get_hist(void)
 {
 	return acq_histogram;
 }
+
+int compare(const void * a, const void * b)
+{
+	//return (*(uint32_t*)a - *(uint32_t*)b);
+	return (*(uint32_t*)b - *(uint32_t*)a);
+}
+
+uint32_t acquisition_hist_median(uint8_t unique_cnt)
+{
+  uint32_t tmp_histogram[ACQ_COUNT];
+  memcpy(tmp_histogram, acq_histogram, sizeof(acq_histogram));
+  
+  qsort(tmp_histogram, ACQ_COUNT, sizeof(uint32_t), compare);
+  return tmp_histogram[unique_cnt / 2];
+}
+
+
 
 	
 

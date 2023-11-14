@@ -23,6 +23,8 @@
 volatile int16_t test_res = 0;
 volatile static uint32_t diff_main = 0;
 
+
+
 gps_ch_t gps_channel1;
 /* Private function prototypes -----------------------------------------------*/
 void gps_new_data_handling(void);
@@ -39,7 +41,7 @@ int main(void)
   gps_fill_summ_table();
   
   memset(&gps_channel1, 0, sizeof(gps_channel1));
-  gps_channel1.prn = 13;
+  gps_channel1.prn = 30;
   
   delay_ms(100);
   signal_capture_init();

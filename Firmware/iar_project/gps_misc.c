@@ -307,11 +307,13 @@ int16_t gps_correlation8(
   return corr_res;
 }
 
-uint16_t correlation_search(uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t* aver_val)
+uint16_t correlation_search(
+	uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
+	uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
 {
   //uint32_t start_t = get_dwt_value();
   
-  //uint16_t max_correl_pos = 0;
+  uint16_t max_correl_pos = 0;
   uint16_t max_correl_val = 0;
   
   uint32_t total_summ = 0;
@@ -323,14 +325,15 @@ uint16_t correlation_search(uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q,
     if (corr_res > max_correl_val)
     {
       max_correl_val = corr_res;
-      //max_correl_pos = offset;
+      max_correl_pos = offset;
     }
     
     total_summ += corr_res;
   }
-  total_summ = total_summ / (PRN_LENGTH * 2);
+  //total_summ = total_summ / (PRN_LENGTH * 2);
 
   *aver_val = (uint16_t)total_summ;
+  *phase = max_correl_pos;
   
   //uint32_t stop_t = get_dwt_value();
   //diff = stop_t - start_t;

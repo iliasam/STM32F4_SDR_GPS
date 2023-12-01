@@ -1,7 +1,7 @@
 #include "common_ram.h"
 
-uint16_t tmp_sin_data[PRN_SPI_WORDS_CNT];
-uint16_t tmp_cos_data[PRN_SPI_WORDS_CNT];
+//uint16_t tmp_sin_data[PRN_SPI_WORDS_CNT];
+//uint16_t tmp_cos_data[PRN_SPI_WORDS_CNT];
 
 /*
 //Tmp correlation results

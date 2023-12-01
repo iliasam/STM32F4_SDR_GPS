@@ -41,20 +41,23 @@ int main(void)
   gps_fill_summ_table();
   
   memset(&gps_channel1, 0, sizeof(gps_channel1));
-  gps_channel1.prn = 30;
+  gps_channel1.prn = 1;
+  gps_channell_prepare(&gps_channel1);
   
   delay_ms(100);
   signal_capture_init();
   
-  /*
+  
   uint16_t* signal_p = sim_generate_data();
   sim_add_noise(signal_p, 45);
-  gps_generate_prn_data(tmp_prn_data, 1);
   
-  uint16_t tmp_val;
-  correlation_search(tmp_prn_data, tmp_data_i, tmp_data_q, &tmp_val);
-  */
+  gps_generate_prn_data2(&gps_channel1, tmp_prn_data, 0);
+  //gps_generate_prn_data(tmp_prn_data, 1);
   
+  gps_shift_to_zero_freq((uint8_t*)signal_p, (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q, IF_FREQ_HZ + 2000);
+  uint16_t avr_val;
+  uint16_t best_phase = 0;
+  correlation_search(tmp_prn_data, tmp_data_i, tmp_data_q, 0, (PRN_LENGTH * 2), &avr_val, &best_phase);
   
   signal_capture_need_data_copy();
   

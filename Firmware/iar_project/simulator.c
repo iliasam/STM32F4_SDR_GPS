@@ -25,6 +25,8 @@ uint16_t spi_tx_array[PRN_SPI_WORDS_CNT];
 /// See the code - some values are hardcoded!
 uint8_t tmp_noise = 15;
 
+volatile static uint32_t diff2;
+
 //*************************************************************
 
 void gencode_L1CA(int prn);
@@ -57,30 +59,31 @@ void sim_add_noise(uint16_t* buff_p, uint8_t noise_level)
 
 void gps_generate_prn_data(uint16_t* data, uint8_t prn)
 {
-	uint32_t total_bit_cnt = 0;
-	uint16_t word_cnt = 0;
-
-	gencode_L1CA(prn);
-
-	// Fill two constant buffers
-	float period_prn = (float)BITS_IN_PRN / (float)PRN_LENGTH;
-	total_bit_cnt = 0;
-	for (word_cnt = 0; word_cnt < PRN_SPI_WORDS_CNT; word_cnt++)
-	{
-		uint16_t value = 0;
-		for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
-		{
-			uint16_t prn_bit_cnt = (uint16_t)((float)total_bit_cnt / period_prn);
-			uint8_t prn_bit = prn_array[prn_bit_cnt];
-
-			if (prn_bit == 1) //not inverted
-				value |= 1 << bit_cnt;
-
-			total_bit_cnt++;
-		}
-		data[word_cnt] = value;
-	}
+  uint32_t total_bit_cnt = 0;
+  uint16_t word_cnt = 0;
+  
+  gencode_L1CA(prn);
+  
+  // Fill two constant buffers
+  float period_prn = (float)BITS_IN_PRN / (float)PRN_LENGTH;
+  total_bit_cnt = 0;
+  for (word_cnt = 0; word_cnt < PRN_SPI_WORDS_CNT; word_cnt++)
+  {
+    uint16_t value = 0;
+    for (uint8_t bit_cnt = 0; bit_cnt < 16; bit_cnt++)
+    {
+      uint16_t prn_bit_cnt = (uint16_t)((float)total_bit_cnt / period_prn);
+      uint8_t prn_bit = prn_array[prn_bit_cnt];
+      
+      if (prn_bit == 1) //not inverted
+        value |= 1 << bit_cnt;
+      
+      total_bit_cnt++;
+    }
+    data[word_cnt] = value;
+  }
 }
+
 
 uint16_t* sim_generate_data(void)
 {

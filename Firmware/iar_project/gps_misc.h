@@ -1,4 +1,9 @@
-#include "stdint.h"
+#ifndef _GPS_MISC_H
+#define _GPS_MISC_H
+
+#include <stdint.h>
+#include <time.h>
+#include "config.h"
 
 typedef enum
 {
@@ -27,14 +32,23 @@ typedef struct
 {
 	gps_acq_t	acq_data;//Acq variables
 	uint8_t		prn; //Sat PRN code
+        uint8_t	        prn_code[PRN_LENGTH];//PRN data, generated at the start
 } gps_ch_t;
 
 //********************************************************************************
 
 void gps_fill_summ_table(void);
 uint8_t gps_check_bit16(uint16_t* ptr, uint8_t pos);
-void gps_generate_sin(uint16_t* ptr, uint16_t length, float freq_hz);
-void gps_generate_cos(uint16_t* ptr, uint16_t length, float freq_hz);
+
+void gps_channell_prepare(gps_ch_t* channel);
+
+void gps_generate_prn_data2(
+  gps_ch_t* channel, uint16_t* data, uint16_t offset_bits);
+
+void gps_shift_to_zero_freq(
+  uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz);
+
+
 
 void gps_mult8(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset);
 uint8_t gps_summ8(uint8_t data);
@@ -50,5 +64,5 @@ void gps_mult_iq32(uint8_t* src_i, uint8_t* src_q, uint8_t* src2, uint8_t* dst_i
 
 void gps_mult8_fast(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset);
 
-void gps_shift_to_zero_freq(
-  uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, uint32_t freq);
+#endif
+

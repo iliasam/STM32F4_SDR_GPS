@@ -31,6 +31,10 @@
 #define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 words
 #define PRN_LENGTH              1023
 
+
+//#define IF_NCO_STEP_HZ        ((float)SPI_BAUDRATE_HZ / (float)(1 << 32)) //NCO accumulator is 32bit
+#define IF_NCO_STEP_HZ	        (0.003810972f)
+
 //--------------------------
 #define LED4_PIN                         GPIO_Pin_12
 #define LED4_GPIO_PORT                   GPIOD

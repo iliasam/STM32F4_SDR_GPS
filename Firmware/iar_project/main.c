@@ -52,7 +52,6 @@ int main(void)
   sim_add_noise(signal_p, 45);
   
   gps_generate_prn_data2(&gps_channel1, tmp_prn_data, 0);
-  //gps_generate_prn_data(tmp_prn_data, 1);
   
   gps_shift_to_zero_freq((uint8_t*)signal_p, (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q, IF_FREQ_HZ + 2000);
   uint16_t avr_val;

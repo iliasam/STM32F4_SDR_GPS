@@ -332,40 +332,20 @@ void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data
 void gps_generate_prn_data2(
   gps_ch_t* channel, uint16_t* data, uint16_t offset_bits)
 {
-  uint32_t start_t = get_dwt_value();
+  memset(data, 0, PRN_SPI_WORDS_CNT * 2);
+  uint32_t* tmp_p32;
   
-  uint32_t total_bit_cnt = 0;
-  uint8_t* prn_array = channel->prn_code;
+  uint32_t wr_word = 0x0000FFFF << (offset_bits & 15);
+  uint8_t* prn_data_p = channel->prn_code;//array with 0/1 values
   
-  float period_prn = (float)BITS_IN_PRN / (float)PRN_LENGTH;
-  
-  uint16_t target_bit_cnt = 0;
-  uint16_t word_pos = 0;
-  uint8_t bit_pos = 0;
-  
-  while (total_bit_cnt < BITS_IN_PRN)
+  for (uint16_t word_cnt = 0; word_cnt < PRN_SPI_WORDS_CNT; word_cnt++)
   {
-    uint16_t prn_bit_cnt = (uint16_t)((float)total_bit_cnt / period_prn);//0-1023 range
-    uint8_t prn_bit = prn_array[prn_bit_cnt];
-    target_bit_cnt = total_bit_cnt + offset_bits;
-    
-    word_pos = target_bit_cnt / 16;
-    if (word_pos >= PRN_SPI_WORDS_CNT)
-      word_pos = word_pos - PRN_SPI_WORDS_CNT;
-    
-    bit_pos = target_bit_cnt & 0xF;
-    
-    if (prn_bit == 1)//no inversion
-      data[word_pos] |= 1 << bit_pos;
-    else
-      data[word_pos] &= ~(1 << bit_pos);
-    
-    total_bit_cnt++;
+    tmp_p32 = (uint32_t*)data;
+    if (*prn_data_p)
+      *tmp_p32 |= wr_word;
+    data++;
+    prn_data_p++;
   }
-  
-  uint32_t stop_t = get_dwt_value();
-  diff = stop_t - start_t;
-  diff = diff / 168;
 }
 
 //*********************************************************************

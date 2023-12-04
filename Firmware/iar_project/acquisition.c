@@ -47,14 +47,14 @@ void acquisition_single_freq_check_reset(void)
 
 int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t offset)
 {
-  uint8_t prn = channel->prn;
+  //uint8_t prn = channel->prn;
   
   if (channel->acq_data.state == GPS_ACQ_DONE)
     return 0;
   
   if (channel->acq_data.state == GPS_ACQ_NEED_FREQ_SEARCH)
   {
-    //if (channel->acq_data.given_freq_offset_hz != 0)
+    if (channel->acq_data.given_freq_offset_hz != 0)
     {
       channel->acq_data.found_freq_offset_hz = channel->acq_data.given_freq_offset_hz;
       channel->acq_data.state = GPS_ACQ_FREQ_SEARCH_DONE;

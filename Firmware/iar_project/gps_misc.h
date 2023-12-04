@@ -63,7 +63,7 @@ typedef struct
   uint16_t		pre_track_phases[PRE_TRACK_POINTS_MAX_CNT];
   uint8_t	        pre_track_count;
   
-  float			code_phase_fine2;//1 step is (0.5chip / 8)
+  float			code_phase_fine;//1 step is (0.5chip / 8)
   
   uint8_t	        debug_flag;
   
@@ -164,14 +164,20 @@ void gps_generate_prn_data2(
 
 void gps_shift_to_zero_freq(
   uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz);
-
+void gps_shift_to_zero_freq_track(
+  gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q);
 
 
 void gps_mult8(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset);
 uint8_t gps_summ8(uint8_t data);
 uint16_t gps_summ(uint16_t* data, uint16_t length);
+
 int16_t gps_correlation8(
   uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset);
+void gps_correlation_iq(
+  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset, 
+  int16_t* res_i, int16_t* res_q);
+
 uint16_t correlation_search(
 	uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
 	uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase);

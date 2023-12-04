@@ -1043,6 +1043,9 @@
     <file>
       <name>$PROJ_DIR$\..\system_stm32f4xx.c</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\tracking.c</name>
+    </file>
   </group>
 </project>
 

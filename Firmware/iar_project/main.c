@@ -9,6 +9,7 @@
 #include "signal_capture.h"
 #include "common_ram.h"
 #include "acquisition.h"
+#include "tracking.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -22,13 +23,14 @@
 
 volatile int16_t test_res = 0;
 volatile static uint32_t diff_main = 0;
-extern uint32_t signal_capture_packet_cnt;;
-
-
 
 gps_ch_t gps_channel1;
 /* Private function prototypes -----------------------------------------------*/
 void gps_new_data_handling(void);
+
+uint8_t need_slow_data_proc(void);
+void main_slow_data_proc(void);
+void main_fast_data_proc(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -64,27 +66,82 @@ int main(void)
   
   while(1)
   {
-    uint8_t have_data = signal_capture_check_copied();
-    if (have_data == 0)
+    uint8_t need_slow = need_slow_data_proc();
+    if (need_slow)
     {
-      //wait for IRQ
-      while (signal_capture_have_irq() == 0) 
-      {
-        asm("nop");
-      }
-      
-      //Process IRQ
-      signal_capture_handling();
+      //Not realtime
+      main_slow_data_proc();
     }
     else
     {
-      //have new data
-      gps_new_data_handling();
-      signal_capture_need_data_copy();
+      //Realtime!
+      uint8_t have_new_data = signal_capture_have_irq();
+      if (have_new_data)
+      {
+        main_fast_data_proc();
+      }
     }
+    
+
   }//end of while(1)
   
 }//end of main()
+
+//*********************************
+
+void main_fast_data_proc(void)
+{
+  uint8_t* signal_p = signal_capture_get_ready_buf();
+  uint32_t time_cnt = signal_capture_get_packet_cnt();
+  
+  uint32_t index_big = time_cnt % (TRACKING_CH_LENGTH * 4 + 1);
+  uint32_t index = index_big % TRACKING_CH_LENGTH;
+  if (index_big == (TRACKING_CH_LENGTH * 4))
+    index = 0xFF;
+  gps_tracking_process(&gps_channel1, signal_p, (uint8_t)index);
+}
+
+
+//Acqusition data proc - not realtime
+void main_slow_data_proc(void)
+{
+  uint8_t have_data = signal_capture_check_copied();
+  if (have_data == 0)
+  {
+    //wait for IRQ
+    while (signal_capture_have_irq() == 0) 
+    {
+      asm("nop");
+    }
+    
+    //Process IRQ
+    signal_capture_handling();
+  }
+  else
+  {
+    //have new data
+    gps_new_data_handling();
+    signal_capture_need_data_copy();
+  }
+  
+  
+  if (gps_channel1.acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH3_DONE)
+  {
+    printf("FINAL ACQ (SRCH_3) CODE=%d\n", gps_channel1.acq_data.found_code_phase);
+    gps_channel1.acq_data.state = GPS_ACQ_DONE;
+    gps_channel1.tracking_data.state = GPS_NEED_PRE_TRACK;
+  }
+}
+
+
+//Return 1 hen acq data processing is needed
+uint8_t need_slow_data_proc(void)
+{
+  if (gps_channel1.acq_data.state < GPS_ACQ_CODE_PHASE_SEARCH3_DONE)
+    return 1;
+  
+  return 0;
+}
 
 //Can be long!
 void gps_new_data_handling(void)

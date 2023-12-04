@@ -27,9 +27,21 @@ void init_dma(void);
 
 //************************************************************************
 
+uint32_t signal_capture_get_packet_cnt(void)
+{
+  return signal_capture_packet_cnt;
+}
+
 uint8_t* signal_capture_get_copy_buf(void)
 {
   return (uint8_t*)spi_rx_copy_buffer;
+}
+
+//Data can be overwriten by DMA! Need to be processed fast.
+uint8_t* signal_capture_get_ready_buf(void)
+{
+  signal_capture_irq_unprocessed_flag = 0;
+  return (uint8_t*)spi_curr_ready_rx_buf;
 }
 
 void SPI_IRQ_HANDLER(void)

@@ -260,6 +260,25 @@ int16_t gps_correlation8(
   return corr_res;
 }
 
+void gps_correlation_iq(
+  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset, 
+  int16_t* res_i, int16_t* res_q)
+{
+  int16_t summ_i;
+  int16_t summ_q;
+  
+  gps_mult_and_summ(
+    (uint8_t*)data_i, (uint8_t*)data_q, 
+    (uint8_t*)prn_p, 
+    (uint16_t*)&summ_i, (uint16_t*)&summ_q, 
+    PRN_SPI_WORDS_CNT * 2, offset);
+  summ_i = summ_i - BITS_IN_PRN / 2;
+  summ_q = summ_q - BITS_IN_PRN / 2;
+  
+  *res_i = summ_i;
+  *res_q = summ_q;
+}
+
 uint16_t correlation_search(
 	uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
 	uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
@@ -326,6 +345,39 @@ void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data
     ptr_q32++;
     signal_p32++;
   }
+}
+
+//With keeping phase
+void gps_shift_to_zero_freq_track(
+  gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q)
+{
+  const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
+  const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
+  
+  uint32_t acc_step = (uint32_t)(
+    ((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
+  uint64_t acc_step64 = (uint64_t)acc_step * 32;
+  acc_step = (uint32_t)acc_step64;
+  
+  uint32_t accum = trk_channel->if_freq_accum;
+  uint32_t* ptr_i32 = (uint32_t*)data_i;
+  uint32_t* ptr_q32 = (uint32_t*)data_q;
+  uint32_t* signal_p32 = (uint32_t*)signal_data;
+  
+  uint16_t word_cnt = 0;
+  for (word_cnt = 0; word_cnt < (PRN_SPI_WORDS_CNT / 2); word_cnt++)//to get 32bit words
+  {
+    uint32_t phase = (accum >> 30);//upper 2 bits
+    *ptr_i32 = sin_buf32[phase] ^ *signal_p32;
+    *ptr_q32 = cos_buf32[phase] ^ *signal_p32;
+    accum += acc_step;
+    
+    ptr_i32++;
+    ptr_q32++;
+    signal_p32++;
+  }
+  
+  trk_channel->if_freq_accum = accum;
 }
 
 

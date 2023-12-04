@@ -1120,6 +1120,12 @@
       <name>$PROJ_DIR$\..\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\nav_data.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\nav_data_decode.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\signal_capture.c</name>
     </file>
     <file>

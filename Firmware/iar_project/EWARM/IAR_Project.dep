@@ -2,7 +2,7 @@
 
 <project>
   <fileVersion>2</fileVersion>
-  <fileChecksum>1441980287</fileChecksum>
+  <fileChecksum>2569896946</fileChecksum>
   <configuration>
     <name>Demo</name>
     <outputs>
@@ -175,9 +175,17 @@
       <file>$PROJ_DIR$\Demo\Obj\system_stm32f4xx.__cstat.et</file>
       <file>$PROJ_DIR$\Demo\Obj\stm32f4xx_spi.o</file>
       <file>$PROJ_DIR$\..\tracking.c</file>
+      <file>$PROJ_DIR$\..\nav_data.h</file>
+      <file>$PROJ_DIR$\Demo\Obj\nav_data.o</file>
+      <file>$PROJ_DIR$\Demo\Obj\nav_data.pbi</file>
       <file>$PROJ_DIR$\Demo\Obj\tracking.o</file>
       <file>$PROJ_DIR$\Demo\Obj\tracking.pbi</file>
       <file>$PROJ_DIR$\..\tracking.h</file>
+      <file>$PROJ_DIR$\..\nav_data_decode.c</file>
+      <file>$PROJ_DIR$\..\nav_data_decode.h</file>
+      <file>$PROJ_DIR$\Demo\Obj\nav_data_decode.o</file>
+      <file>$PROJ_DIR$\Demo\Obj\nav_data_decode.pbi</file>
+      <file>$PROJ_DIR$\..\nav_data.c</file>
     </outputs>
     <file>
       <name>$PROJ_DIR$\..\..\Libraries\STM32F4xx_StdPeriph_Driver\src\stm32f4xx_rcc.c</name>
@@ -306,11 +314,11 @@
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 120 165 127 122 156 61 125 51 163 91 94 141 104 37 103 135 123 35 117 96 147 74 134 138 101 143 145 62 59 34 130 70 88 28 90 29 32 89 154 36 82 67 107 44 146 108 64 114 58 100 71 3 124 84 80 171 69 81 144 40 162 72</file>
+          <file> 120 165 127 122 156 61 125 51 163 91 94 141 104 37 103 135 123 35 117 96 147 74 134 138 101 143 145 62 59 34 130 70 88 28 90 29 32 89 154 36 82 67 107 44 146 108 64 114 58 100 71 3 124 84 80 174 69 81 144 40 162 72</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 64 37 127 103 70 80 165 138 154 100 81 91 122 61 35 62 29 107 114 124 125 141 74 117 123 143 34 28 89 82 146 72 104 58 3 84 171 69 162 156 51 163 94 147 135 96 134 101 145 59 130 88 90 32 36 67 44 108 144 120 71 40</file>
+          <file> 122 108 130 80 96 134 104 100 81 165 127 51 163 145 90 67 37 114 124 91 156 94 147 135 123 101 59 88 32 36 44 72 58 3 84 174 69 162 61 125 141 103 74 117 35 138 143 62 34 70 28 29 89 154 82 107 146 64 144 120 71 40</file>
         </tool>
       </inputs>
     </file>
@@ -824,7 +832,7 @@
       <inputs>
         <tool>
           <name>ILINK</name>
-          <file> 121 157 52 73 150 113 76 116 105 68 110 33 148 83 31 151 46 63 87 79 167 57 149 139 164 169 98 85 49 42 60</file>
+          <file> 121 157 52 73 150 113 76 170 177 116 105 68 110 33 148 83 31 151 46 63 87 79 167 57 149 139 164 172 98 85 49 42 60</file>
         </tool>
       </inputs>
     </file>
@@ -851,21 +859,67 @@
       <outputs>
         <tool>
           <name>ICCARM</name>
-          <file> 169</file>
+          <file> 172</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 170</file>
+          <file> 173</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICCARM</name>
-          <file> 165 127 122 156 61 125 51 163 162 94 72 69 91 141 100 71 3 84 171 81 144 40</file>
+          <file> 165 127 122 156 61 125 51 163 162 94 72 69 91 141 100 71 3 169 84 174 81 144 40</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 94 165 81 122 100 156 127 69 171 51 163 3 144 162 91 84 61 125 72 141 71 40</file>
+          <file> 165 3 122 100 127 51 163 94 69 84 156 144 162 91 169 174 81 61 125 72 141 71 40</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\nav_data_decode.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 177</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 178</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 165 127 122 156 61 125 51 163 162 94 72 69 91 141 100 71 3 176 81 144 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 122 127 100 125 72 141 71 69 3 61 94 51 40 162 91 176 81 156 163 165 144</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\nav_data.c</name>
+      <outputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 170</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 171</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>ICCARM</name>
+          <file> 165 127 122 156 61 125 51 163 162 94 72 69 91 141 100 71 3 169 124 176 81 144 40</file>
+        </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 165 100 3 94 40 122 156 127 69 124 51 163 162 91 169 176 81 61 125 72 141 71 144</file>
         </tool>
       </inputs>
     </file>

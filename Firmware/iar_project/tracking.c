@@ -3,7 +3,7 @@
 #include "stdlib.h"
 #include "stdio.h"
 #include "gps_misc.h"
-//#include "nav_data.h"
+#include "nav_data.h"
 #include "common_ram.h"
 #include "tracking.h"
 #include "config.h"
@@ -122,7 +122,7 @@ void gps_tracking_data_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
   
   if (test_sim_cnt == 0)
   {
-    //gps_nav_data_analyse_new_code(channel, index, IP);
+    gps_nav_data_analyse_new_code(channel, index, IP);
   }
   else
   {

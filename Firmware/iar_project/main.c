@@ -81,8 +81,6 @@ int main(void)
         main_fast_data_proc();
       }
     }
-    
-
   }//end of while(1)
   
 }//end of main()

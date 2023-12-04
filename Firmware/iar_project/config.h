@@ -32,8 +32,23 @@
 #define PRN_LENGTH              1023
 
 
+
+#define ACQ_SEARCH_FREQ_HZ		(7000) //Search zone is x2
+#define ACQ_SEARCH_STEP_HZ		(500)
+
+
+#define TRACKING_DLL1_C1		(1.0f)
+#define TRACKING_DLL1_C2		(300.0f)
+
+#define TRACKING_PLL1_C1		(10.0f)
+#define TRACKING_PLL1_C2		(1000.0f)
+#define TRACKING_FLL1			(2000.0f)
+
 //#define IF_NCO_STEP_HZ        ((float)SPI_BAUDRATE_HZ / (float)(1 << 32)) //NCO accumulator is 32bit
 #define IF_NCO_STEP_HZ	        (0.003810972f)
+
+//Number of analysed PRN periods in one channal
+#define TRACKING_CH_LENGTH      4
 
 //--------------------------
 #define LED4_PIN                         GPIO_Pin_12

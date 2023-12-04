@@ -22,6 +22,7 @@
 
 volatile int16_t test_res = 0;
 volatile static uint32_t diff_main = 0;
+extern uint32_t signal_capture_packet_cnt;;
 
 
 
@@ -41,22 +42,23 @@ int main(void)
   gps_fill_summ_table();
   
   memset(&gps_channel1, 0, sizeof(gps_channel1));
-  gps_channel1.prn = 1;
+  gps_channel1.prn = 5;
+  gps_channel1.acq_data.given_freq_offset_hz = 1200;
   gps_channell_prepare(&gps_channel1);
   
   delay_ms(100);
   signal_capture_init();
   
-  
+  /*
   uint16_t* signal_p = sim_generate_data();
   sim_add_noise(signal_p, 45);
   
   gps_generate_prn_data2(&gps_channel1, tmp_prn_data, 0);
-  
   gps_shift_to_zero_freq((uint8_t*)signal_p, (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q, IF_FREQ_HZ + 2000);
   uint16_t avr_val;
   uint16_t best_phase = 0;
   correlation_search(tmp_prn_data, tmp_data_i, tmp_data_q, 0, (PRN_LENGTH * 2), &avr_val, &best_phase);
+  */
   
   signal_capture_need_data_copy();
   
@@ -96,10 +98,12 @@ void gps_new_data_handling(void)
 }
 ///////////////////////////////////
 
+/*
 int putchar(int c)
 {
   return c;    
 }
+*/
 
 
 void delay_ms(uint32_t ms)

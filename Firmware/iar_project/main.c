@@ -44,8 +44,8 @@ int main(void)
   gps_fill_summ_table();
   
   memset(&gps_channel1, 0, sizeof(gps_channel1));
-  gps_channel1.prn = 5;
-  gps_channel1.acq_data.given_freq_offset_hz = 1200;
+  gps_channel1.prn = 13;
+ // gps_channel1.acq_data.given_freq_offset_hz = 1200;
   gps_channell_prepare(&gps_channel1);
   
   delay_ms(100);

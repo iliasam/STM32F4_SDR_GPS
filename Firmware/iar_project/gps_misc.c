@@ -246,7 +246,7 @@ int16_t gps_correlation8(
   summ1 = summ1 - BITS_IN_PRN / 2;
   summ2 = summ2 - BITS_IN_PRN / 2;
   
-  /*
+  
   if (summ1 < 0)
     summ1 = 0;
   if (summ2 < 0)
@@ -255,8 +255,8 @@ int16_t gps_correlation8(
   int32_t summ1S = summ1 * summ1;
   int32_t summ2S = summ2 * summ2;
   int16_t corr_res = (int16_t)sqrtf((float)summ1S + (float)summ2S);
-  */
-  int16_t corr_res = summ1 + summ2;
+  
+  //int16_t corr_res = summ1 + summ2;
   return corr_res;
 }
 

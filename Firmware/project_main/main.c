@@ -11,6 +11,7 @@
 #include "common_ram.h"
 #include "acquisition.h"
 #include "tracking.h"
+#include "gps_master.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -71,8 +72,8 @@ int main(void)
   
   while(1)
   {
-    uint8_t need_slow = need_slow_data_proc();
-    if (need_slow)
+    uint8_t need_slow = gps_master_need_acq();
+    if (need_slow > 0)
     {
       //Not realtime
       main_slow_data_proc();
@@ -131,7 +132,7 @@ void main_slow_data_proc(void)
   }
 }
 
-
+/*
 //Return 1 when acq. data processing is needed
 uint8_t need_slow_data_proc(void)
 {
@@ -140,6 +141,7 @@ uint8_t need_slow_data_proc(void)
   
   return 0;
 }
+*/
 
 // Acquisition data process
 // Can be long!
@@ -147,18 +149,7 @@ void gps_new_data_handling(void)
 {
   uint8_t* signal_p = signal_capture_get_copy_buf();
   acquisition_process(&gps_channels[0], signal_p);
-  
-  if (gps_channels[0].acq_data.state == GPS_ACQ_FREQ_SEARCH_DONE)
-  {
-    printf("FINAL FREQ=%d Hz\n", gps_channels[0].acq_data.found_freq_offset_hz);
-  }
-  
-  if (gps_channels[0].acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH3_DONE)
-  {
-    printf("FINAL ACQ (SRCH_3) CODE=%d\n", gps_channels[0].acq_data.found_code_phase);
-    gps_channels[0].acq_data.state = GPS_ACQ_DONE;
-    gps_channels[0].tracking_data.state = GPS_NEED_PRE_TRACK;
-  }
+  gps_master_handling(gps_channels);
 }
 ///////////////////////////////////
 

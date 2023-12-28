@@ -1063,6 +1063,9 @@
       <name>$PROJ_DIR$\..\GPS\common_ram.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\GPS\gps_master.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\GPS\gps_misc.c</name>
     </file>
     <file>

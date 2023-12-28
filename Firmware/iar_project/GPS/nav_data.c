@@ -109,9 +109,6 @@ void gps_nav_data_analyse_new_code(gps_ch_t* channel, uint8_t index, int16_t new
         channel->nav_data.period_sync_ok_flag = 0;
     }
     
-    //sprintf(tmp_txt, "SWAP=%ld\n", swap_timestamp);
-    //OutputDebugString((LPCSTR)tmp_txt);
-    
     channel->nav_data.old_swap_time = swap_timestamp;
   }
 }
@@ -151,10 +148,6 @@ void gps_nav_data_bits_extraction(gps_ch_t* channel, uint8_t new_short_bit, uint
 // new_bit - bit on nav data (20ms long)
 void gps_nav_data_words_detection(gps_ch_t* channel, uint8_t new_bit)
 {
-  //char tmp_txt[100];
-  //sprintf(tmp_txt, "%d", new_bit);
-  //OutputDebugString((LPCSTR)tmp_txt);
-  
   if (channel->nav_data.word_cnt == 0) //no preamble sync
   {
     //Shift bits

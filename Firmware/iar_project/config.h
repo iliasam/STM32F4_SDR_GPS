@@ -1,18 +1,15 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
-
+//MCU speed is 168MHz
 #define CPU_TICKS_US            (168)
-
-// 8*8=64MHz
-//#define MCU_CLK_MULTIPLIER      RCC_PLLMul_8
 
 #define SPI_NAME                SPI2
 #define SPI_PRESCALER           SPI_BaudRatePrescaler_4
 #define SPI_DMA_STREAM          DMA1_Stream3
 #define SPI_DMA_CH              DMA_Channel_0
 #define SPI_DMA_IRQ             DMA1_Stream3_IRQn
-#define SPI_IRQ_HANDLER         DMA1_Stream3_IRQHandler
+#define SPI_DMA_IRQ_HANDLER     DMA1_Stream3_IRQHandler
 
 #define SPI_GPIO_CLK            RCC_AHB1Periph_GPIOB
 #define SPI_CLK_PIN             GPIO_Pin_13
@@ -33,24 +30,28 @@
 
 
 
-#define ACQ_SEARCH_FREQ_HZ		(7000) //Search zone is x2
-#define ACQ_SEARCH_STEP_HZ		(500)
+#define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
+#define ACQ_SEARCH_STEP_HZ      (500)
 
 
-#define TRACKING_DLL1_C1		(1.0f)
-#define TRACKING_DLL1_C2		(300.0f)
+#define TRACKING_DLL1_C1        (1.0f)
+#define TRACKING_DLL1_C2        (300.0f)
 
-#define TRACKING_PLL1_C1		(10.0f)
-#define TRACKING_PLL1_C2		(1000.0f)
-#define TRACKING_FLL1			(2000.0f)
+#define TRACKING_PLL1_C1        (10.0f)
+#define TRACKING_PLL1_C2        (1000.0f)
+#define TRACKING_FLL1	        (2000.0f)
 
 //#define IF_NCO_STEP_HZ        ((float)SPI_BAUDRATE_HZ / (float)(1 << 32)) //NCO accumulator is 32bit
 #define IF_NCO_STEP_HZ	        (0.003810972f)
 
-//Number of analysed PRN periods in one channal
+// Number of analysed PRN periods in one channal
 #define TRACKING_CH_LENGTH      4
 
+//Number of used satellites
+#define GPS_SAT_CNT	        4
+
 //--------------------------
+//Debug only
 #define LED4_PIN                         GPIO_Pin_12
 #define LED4_GPIO_PORT                   GPIOD
 

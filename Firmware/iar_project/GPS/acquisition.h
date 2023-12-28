@@ -12,7 +12,6 @@
 
 void acquisition_process(gps_ch_t* channel, uint8_t* data);
 uint32_t* acquisition_get_hist(void);
-uint8_t acquisition_need_new_data(gps_ch_t* channel);
 
 void acquisition_freq_test(gps_ch_t* channel, uint8_t* data);
 uint8_t* acquisition_get_phase_hist(void);

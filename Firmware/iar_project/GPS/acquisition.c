@@ -19,7 +19,7 @@ uint8_t acq_single_freq_count = 0;
 
 uint8_t acq_code_phase_histogram[ACQ_PHASE1_HIST_SIZE];
 
-int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t offset);
+void acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t offset);
 void acquisition_freq_search(gps_ch_t* channel, uint8_t* data);
 
 
@@ -47,10 +47,10 @@ void acquisition_single_freq_check_reset(void)
   acq_single_freq_count = 0;
 }
 
-int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t offset)
+void acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t offset)
 {
   if (channel->acq_data.state == GPS_ACQ_DONE)
-    return 0;
+    return;
   
   if (channel->acq_data.state == GPS_ACQ_NEED_FREQ_SEARCH)
   {
@@ -58,7 +58,7 @@ int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t of
     {
       channel->acq_data.found_freq_offset_hz = channel->acq_data.given_freq_offset_hz;
       channel->acq_data.state = GPS_ACQ_FREQ_SEARCH_DONE;
-      return 0;
+      return;
     }
     
     acquisition_single_freq_check_reset();
@@ -70,7 +70,7 @@ int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t of
   if (channel->acq_data.state == GPS_ACQ_FREQ_SEARCH_RUN)
   {
     acquisition_freq_search(channel, data);
-    return 0;
+    return;
   }
   
   //CODE search
@@ -102,7 +102,7 @@ int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t of
     channel->acq_data.code_hist_step = (500 / ACQ_PHASE1_HIST_SIZE) + 1;
     acquisition_single_freq_check_reset();
     channel->acq_data.state = GPS_ACQ_CODE_PHASE_SEARCH2;
-    return 0;
+    return;
   }
   
   if (channel->acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH2_DONE)
@@ -122,7 +122,7 @@ int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t of
     acquisition_single_freq_check_reset();
     
     channel->acq_data.state = GPS_ACQ_CODE_PHASE_SEARCH3;
-    return 0;
+    return;
   }
   
   if ((channel->acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH1) || 
@@ -130,38 +130,28 @@ int16_t acquisition_process_channel(gps_ch_t* channel, uint8_t* data, uint8_t of
         (channel->acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH3) )
   {
     acquisition_code_phase_search(channel, data);
-    return 0;
+    return;
   }
   
-  return 0;
+  return;
 }
 
-uint8_t acquisition_need_new_data(gps_ch_t* channel)
-{
-  if (channel->acq_data.state == GPS_ACQ_FREQ_SEARCH_RUN)
-  {
-    return 1;
-  }
-  else if (channel->acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH1)
-    return 1;
-  else
-    return 1;
-}
 
 void acquisition_code_phase_search2(gps_ch_t* channel, uint8_t* data)
 {
   gps_generate_prn_data2(channel, tmp_prn_data, 0);
   gps_shift_to_zero_freq(
-                         data,
-                         (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q,
-                         IF_FREQ_HZ + channel->acq_data.found_freq_offset_hz);
+    data,
+    (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q,
+    IF_FREQ_HZ + channel->acq_data.found_freq_offset_hz);
+  
   uint16_t avr_val;
   uint16_t best_code_phase = 0;
   
   uint16_t res_val = correlation_search(
-                                        tmp_prn_data, tmp_data_i, tmp_data_q,
-                                        channel->acq_data.code_search_start, channel->acq_data.code_search_stop,
-                                        &avr_val, &best_code_phase);
+    tmp_prn_data, tmp_data_i, tmp_data_q,
+    channel->acq_data.code_search_start, channel->acq_data.code_search_stop,
+    &avr_val, &best_code_phase);
   
   if ((best_code_phase < channel->acq_data.code_search_start) ||
       (best_code_phase >= channel->acq_data.code_search_stop))
@@ -169,7 +159,6 @@ void acquisition_code_phase_search2(gps_ch_t* channel, uint8_t* data)
     return;
   }
   
-
   acq_single_freq_phases[acq_single_freq_count] = best_code_phase;
   acq_single_freq_count++;
   
@@ -180,8 +169,8 @@ void acquisition_code_phase_search2(gps_ch_t* channel, uint8_t* data)
   }
 }
 
-/// Check collected data using histoogram analyse(no sorting)
-/// Can be long!
+// Check collected data using histogram analyse(no sorting)
+// Can be long!
 void acquisition_code_phase_search(gps_ch_t* channel, uint8_t* data)
 {
   gps_generate_prn_data2(channel, tmp_prn_data, 0);
@@ -193,9 +182,9 @@ void acquisition_code_phase_search(gps_ch_t* channel, uint8_t* data)
   uint16_t best_code_phase = 0;
   
   uint16_t res_val = correlation_search(
-                                        tmp_prn_data, tmp_data_i, tmp_data_q, 
-                                        channel->acq_data.code_search_start, channel->acq_data.code_search_stop, 
-                                        &avr_val, &best_code_phase);
+    tmp_prn_data, tmp_data_i, tmp_data_q, 
+    channel->acq_data.code_search_start, channel->acq_data.code_search_stop, 
+    &avr_val, &best_code_phase);
   
   if ((best_code_phase < channel->acq_data.code_search_start) ||
       (best_code_phase >= channel->acq_data.code_search_stop))
@@ -203,7 +192,7 @@ void acquisition_code_phase_search(gps_ch_t* channel, uint8_t* data)
     return;
   }
  
-  //Index in histogram
+  //Index is in histogram
   uint8_t index = ((best_code_phase - channel->acq_data.code_search_start) / channel->acq_data.code_hist_step);
   acquisition_add_to_phase_hist(index);
   
@@ -249,6 +238,7 @@ void acquisition_code_phase_search(gps_ch_t* channel, uint8_t* data)
   }
 }
 
+//Debug
 void acquisition_freq_test(gps_ch_t* channel, uint8_t* data)
 {
   gps_generate_prn_data2(channel, tmp_prn_data, 0);
@@ -328,7 +318,7 @@ void acquisition_process_single_freq_histogram(gps_ch_t* channel)
           min_ratio = ratio;
       }
     }
-    if (min_ratio > 2.0f)
+    if (min_ratio > 1.7f)
     {
       channel->acq_data.hist_ratio = min_ratio;
       channel->acq_data.state = GPS_ACQ_FREQ_SEARCH_DONE;

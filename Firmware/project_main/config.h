@@ -33,6 +33,9 @@
 #define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
 #define ACQ_SEARCH_STEP_HZ      (500)
 
+/// 1 step is 0.5 of chip
+#define ACQ_PHASE1_HIST_STEP	(64)
+#define ACQ_PHASE1_HIST_SIZE	((PRN_LENGTH + 1) * 2 / ACQ_PHASE1_HIST_STEP) //32
 
 #define TRACKING_DLL1_C1        (1.0f)
 #define TRACKING_DLL1_C2        (300.0f)
@@ -52,8 +55,8 @@
 
 //--------------------------
 //Debug only
-#define LED4_PIN                         GPIO_Pin_12
-#define LED4_GPIO_PORT                   GPIOD
+#define LED4_PIN                GPIO_Pin_12
+#define LED4_GPIO_PORT          GPIOD
 
 
 #endif //_CONFIG_H

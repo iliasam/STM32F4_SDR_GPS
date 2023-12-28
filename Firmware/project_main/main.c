@@ -5,7 +5,6 @@
 #include "main.h"
 #include "stm32f4xx_rcc.h"
 #include "delay_us_timer.h"
-#include "simulator.h"
 #include "gps_misc.h"
 #include "config.h"
 #include "signal_capture.h"

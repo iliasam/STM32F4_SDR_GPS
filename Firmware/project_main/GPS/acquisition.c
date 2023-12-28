@@ -4,7 +4,6 @@
 #include "stdio.h"
 #include "gps_misc.h"
 #include "acquisition.h"
-#include "simulator.h"
 #include "common_ram.h"
 #include "config.h"
 

@@ -37,19 +37,6 @@ uint8_t gps_summ16(uint16_t data)
   return cnt;
 }
 
-///no inversion
-void gps_mult8_fast(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset)
-{
-  uint16_t pos = 0;
-  for (uint16_t i = 0; i < length; i++)
-  {
-    pos = offset + i;
-    if (pos >= length)
-      pos = pos - length;
-    dst_p[i] = src1_p[pos] ^ src2_p[i];
-  }
-}
-
 
 //length - data in bytes 
 void gps_mult_and_summ(
@@ -106,13 +93,12 @@ int16_t gps_correlation8(
   int16_t summ2;
   
   gps_mult_and_summ(
-                    (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
-                    (uint16_t*)&summ1, (uint16_t*)&summ2, 
-                    PRN_SPI_WORDS_CNT * 2, offset);
+    (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
+    (uint16_t*)&summ1, (uint16_t*)&summ2, 
+    PRN_SPI_WORDS_CNT * 2, offset);
   summ1 = summ1 - BITS_IN_PRN / 2;
   summ2 = summ2 - BITS_IN_PRN / 2;
-  
-  
+ 
   if (summ1 < 0)
     summ1 = 0;
   if (summ2 < 0)
@@ -185,9 +171,19 @@ uint16_t correlation_search(
 }
 
 
+//Rewind phase is if we do "steps" of "gps_shift_to_zero_freq_track"
+void gps_rewind_if_phase(gps_tracking_t* trk_channel, uint8_t steps)
+{
+  uint32_t acc_step = (uint32_t)(((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
+  uint64_t acc_step64 = (uint64_t)acc_step * BITS_IN_PRN * steps;
+  acc_step = (uint32_t)acc_step64;
+  
+  trk_channel->if_freq_accum += acc_step;
+}
 
 void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz)
 {
+  // Suitable only when Fif is near Fsampling/4
   const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
   const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
   

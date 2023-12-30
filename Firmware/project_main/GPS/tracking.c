@@ -4,20 +4,25 @@
 #include "stdio.h"
 #include "gps_misc.h"
 #include "nav_data.h"
-#include "common_ram.h"
 #include "tracking.h"
+#include "signal_capture.h"
+#include "common_ram.h"
 #include "config.h"
 #include <math.h>
 
-#define PLL_BAD_STATE_DETECTION_THRESHOLD		(80)
+#define PLL_BAD_STATE_DETECTION_THRESHOLD       (80)
 
 //In code steps
-#define GPS_PRE_TRACK_ZONE	        (24)
-#define GPS_PRE_TRACK_STEP	        (GPS_PRE_TRACK_ZONE / TRACKING_CH_LENGTH)
+#define GPS_PRE_TRACK_ZONE      (24)
+#define GPS_PRE_TRACK_STEP      (GPS_PRE_TRACK_ZONE / TRACKING_CH_LENGTH)
 
-//One byte is 8bit, one byte is 0.5 of PRN chip
-#define GPS_FINE_RATIO_F	(8.0f)
-#define GPS_FINE_RATIO		8
+//One byte is 8bit, one byte is 0.5 of chip
+#define GPS_FINE_RATIO_F        (8.0f)
+#define GPS_FINE_RATIO	        8
+
+// Number of tracking cycles to calculate SNR
+#define GPS_SNR_CALC_LENGTH     200
+
 
 
 //******************************************************************
@@ -31,6 +36,7 @@ void gps_tracking_data_process(gps_ch_t* channel, uint8_t* data, uint8_t index);
 void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, int16_t IL, int16_t QL);
 void gps_tracking_pll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP);
 void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip);
+void gps_tracking_fll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP);
 
 //****************************************************
 
@@ -38,22 +44,17 @@ void gps_tracking_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
 {
   if (channel->tracking_data.state == GPS_NEED_PRE_TRACK)
   {
-    channel->tracking_data.code_search_start = 
-      channel->acq_data.found_code_phase - (GPS_PRE_TRACK_ZONE / 2);
-    channel->tracking_data.code_search_stop = 
-      channel->acq_data.found_code_phase + (GPS_PRE_TRACK_ZONE / 2);
+    channel->tracking_data.code_search_start = channel->acq_data.found_code_phase - (GPS_PRE_TRACK_ZONE / 2);
+    channel->tracking_data.code_search_stop = channel->acq_data.found_code_phase + (GPS_PRE_TRACK_ZONE / 2);
     if (channel->tracking_data.code_search_start > (2 * PRN_LENGTH))
       channel->tracking_data.code_search_start = 0;
     if (channel->tracking_data.code_search_stop > (2 * PRN_LENGTH))
       channel->tracking_data.code_search_stop = 2 * PRN_LENGTH;
     
-    channel->tracking_data.if_freq_offset_hz = 
-      (float)channel->acq_data.found_freq_offset_hz;
+    channel->tracking_data.if_freq_offset_hz = (float)channel->acq_data.found_freq_offset_hz;
     channel->tracking_data.pre_track_count = 0;
     memset(channel->tracking_data.pre_track_phases, 0, PRE_TRACK_POINTS_MAX_CNT * 2);
     channel->tracking_data.state = GPS_PRE_TRACK_RUN;
-    
-    printf("START PRE_TRACK\n");
   }
   
   if (channel->tracking_data.state == GPS_PRE_TRACK_RUN)
@@ -73,11 +74,24 @@ void gps_tracking_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
 
 void gps_tracking_data_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
 {
-  static uint8_t test_sim_cnt = 0;
-  uint8_t index_mod = index; //modified, in 0-3 range only
+  uint32_t curr_tick_time = signal_capture_get_packet_cnt();
   
-  if (index_mod >= TRACKING_CH_LENGTH)
-    index_mod = 0;
+  if (index >= TRACKING_CH_LENGTH)
+  {
+    return;
+  }
+  
+  uint32_t diff_ticks = curr_tick_time - channel->tracking_data.prev_track_timestamp; //1 normally, 14 at jump
+  channel->tracking_data.prev_track_timestamp = curr_tick_time;
+  
+  if (diff_ticks > 50)//startup check
+    diff_ticks = 1;
+  
+  if (diff_ticks != 1)
+  {
+    //Simulate skipped tracking steps
+    gps_rewind_if_phase(&(channel->tracking_data), (uint8_t)(diff_ticks - 1));
+  }
   
   int16_t code_phase_fine = (int16_t)channel->tracking_data.code_phase_fine;
   uint8_t offset_bits = code_phase_fine & (GPS_FINE_RATIO - 1);
@@ -99,26 +113,38 @@ void gps_tracking_data_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
   int16_t IP, QP;//present
   int16_t IL, QL;//late
   
-  
   gps_correlation_iq(tmp_prn_data, tmp_data_i, tmp_data_q, offset_e, &IE, &QE);
   gps_correlation_iq(tmp_prn_data, tmp_data_i, tmp_data_q, offset_p, &IP, &QP);
   gps_correlation_iq(tmp_prn_data, tmp_data_i, tmp_data_q, offset_l, &IL, &QL);
   
-  gps_tracking_dll(channel, index_mod, IE, QE, IL, QL);
-  gps_tracking_pll(channel, index_mod, IP, QP);
+  gps_tracking_dll(channel, index, IE, QE, IL, QL);
+  gps_tracking_pll(channel, index, IP, QP);
+  gps_tracking_fll(channel, index, IP, QP);
   
-  //A kind of simulation of 4 channel multiplexing
-  //Only 1/4 of data will be processed below
-  if (index == 0)
-  {
-    test_sim_cnt++;
-    if (test_sim_cnt >= 4)
-      test_sim_cnt = 0;
-  }
+  gps_nav_data_analyse_new_code(channel, index, IP);
   
-  if (test_sim_cnt == 0)
+  //Integrating values for SNR calculation
+  channel->tracking_data.i_part_summ += abs(IP);
+  channel->tracking_data.q_part_summ += abs(QP);
+  channel->tracking_data.snr_summ_cnt++;
+  
+  if (channel->tracking_data.snr_summ_cnt > GPS_SNR_CALC_LENGTH)
   {
-    gps_nav_data_analyse_new_code(channel, index, IP);
+    if (channel->tracking_data.q_part_summ == 0)
+    {
+      channel->tracking_data.snr_value = 1.0f;
+      return;
+    }
+    else
+    {
+      float ratio = (float)channel->tracking_data.i_part_summ / 
+        (float)channel->tracking_data.q_part_summ;
+      channel->tracking_data.snr_value = 10.0f * log10f(ratio);
+    }
+    
+    channel->tracking_data.snr_summ_cnt = 0;
+    channel->tracking_data.i_part_summ = 0;
+    channel->tracking_data.q_part_summ = 0;
   }
 }
 
@@ -131,6 +157,43 @@ void gps_tracking_pll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
     carr_phase_err_rad = atan2f((float)QP, (float)IP) / M_PI;
   else
     carr_phase_err_rad = atan2((float)-QP, (float)-IP) / M_PI;
+  
+  if (index != 0)
+    return;
+  
+  float phase_diff_old = carr_phase_err_rad - channel->tracking_data.pll_code_err;
+  if (phase_diff_old > M_PI / 2)
+    phase_diff_old = M_PI - phase_diff_old;
+  if (phase_diff_old < -M_PI / 2)
+    phase_diff_old = -M_PI - phase_diff_old;
+  
+  float dt_s = 0.001f;
+  if (channel->nav_data.period_sync_ok_flag)
+  {
+    channel->tracking_data.if_freq_offset_hz +=
+      8.0f * (phase_diff_old)+
+        (5000.0f * dt_s * carr_phase_err_rad);
+  }
+  else
+  {
+    channel->tracking_data.if_freq_offset_hz +=
+      TRACKING_PLL1_C1 * (phase_diff_old)+
+        (TRACKING_PLL1_C2 * dt_s * carr_phase_err_rad);
+  }
+  
+  channel->tracking_data.pll_code_err = carr_phase_err_rad;
+}
+
+void gps_tracking_fll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
+{
+  gps_tracking_pll_check(channel, index, IP);
+  
+  if (index == 0) //first index is skipped
+  {
+    channel->tracking_data.fll_old_i = IP;
+    channel->tracking_data.fll_old_q = QP;
+    return;
+  }
   
   int16_t oldIP = channel->tracking_data.fll_old_i;
   int16_t oldQP = channel->tracking_data.fll_old_q;
@@ -145,28 +208,39 @@ void gps_tracking_pll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
   if (freq_diff_rad < -M_PI / 2)
     freq_diff_rad = -M_PI - freq_diff_rad;
   
-  float dt_s = 0.001f;
-  channel->tracking_data.if_freq_offset_hz += 
-    TRACKING_PLL1_C1 * (carr_phase_err_rad - channel->tracking_data.pll_code_err) +
-      (TRACKING_PLL1_C2 * dt_s * carr_phase_err_rad) + 
-        (TRACKING_FLL1 * dt_s * freq_diff_rad);
+  float old_diff_rad = freq_diff_rad - channel->tracking_data.fll_err;
+  if (old_diff_rad > M_PI / 2)
+    old_diff_rad = M_PI - old_diff_rad;
+  if (old_diff_rad < -M_PI / 2)
+    old_diff_rad = -M_PI - old_diff_rad;
   
-  channel->tracking_data.pll_code_err = carr_phase_err_rad;
+  
+  float dt_s = 0.001f;
+  float diff_f_hz = TRACKING_FLL1_C1 * dt_s * old_diff_rad + (TRACKING_FLL1_C2 * dt_s * freq_diff_rad);
+  channel->tracking_data.if_freq_offset_hz += diff_f_hz;
+  
   channel->tracking_data.fll_old_i = IP;
   channel->tracking_data.fll_old_q = QP;
-
-  gps_tracking_pll_check(channel, index, IP);
+  channel->tracking_data.fll_err = freq_diff_rad;
+  
+  //char tmp_txt[100];
+  //sprintf(tmp_txt, "%.02f\n", freq_diff_rad);
+  //sprintf(tmp_txt, "%.02f diff=%.02f \n", channel->tracking_data.if_freq_offset_hz, diff_f_hz);
+  //OutputDebugString((LPCSTR)tmp_txt);
 }
 
 // Check that PLL is stable and restart it, if not
 void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
 {
+  if (index >= TRACKING_CH_LENGTH)
+    return;
+  
   channel->tracking_data.pll_check_buf[index] = new_ip;
   if (index < (TRACKING_CH_LENGTH - 1))
     return;
   
-  // Come here when "index" is at end (index == TRACKING_CH_LENGTH - 1)
-  // Count number of sign switching
+  //come here then "index" is at end (index == TRACKING_CH_LENGTH - 1)
+  //Count number of sign switching
   uint8_t swith_counter = 0;//sign switch
   uint8_t pol_old = (channel->tracking_data.pll_check_buf[0] > 0) ? 1 : 0;
   uint8_t pol;
@@ -178,8 +252,8 @@ void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
     pol_old = pol;
   }
   
-  // A kind of filtering
-  // Good data have only 1 or 0 transitions (one bit is 20ms long,  and TRACKING_CH_LENGTH < 20)
+  //A kind of filtering
+  //Good data have only 1 or 0 transitions (one bit is 20ms long,  and TRACKING_CH_LENGTH < 20)
   if (swith_counter > 1) 
   {
     channel->tracking_data.pll_bad_state_cnt++;
@@ -221,12 +295,16 @@ void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
     
     channel->tracking_data.if_freq_offset_hz = (float)new_offset_hz;
     
-    printf("BAD LOCK\n");
+    //printf("BAD LOCK\n");
   }
 }
 
 void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, int16_t IL, int16_t QL)
 {
+  static float avr_summ = 0.0f;
+  static uint8_t summ_cnt = 0;
+  //static int packet_cnt = 0;
+  
   int32_t IE2 = (int32_t)IE * (int32_t)IE;
   int32_t QE2 = (int32_t)QE * (int32_t)QE;
   
@@ -237,38 +315,53 @@ void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, 
   int32_t part2 = (IE2 + QE2) + (IL2 + QL2);
   float code_err = (float)part1 / (float)part2;
   
+  //float code_err = (sqrtf(IE2 + QE2) - sqrtf(IL2 + QL2)) / 
+  //	(sqrtf(IE2 + QE2) + sqrtf(IL2 + QL2));
+  
   code_err = -code_err;
   
   float dt_s = 0.001f;
   /* 2nd order DLL */
   channel->tracking_data.code_phase_fine += (TRACKING_DLL1_C1 * (code_err - channel->tracking_data.dll_code_err) +
-                                              TRACKING_DLL1_C2 * dt_s * code_err);
+                                             TRACKING_DLL1_C2 * dt_s * code_err);
   
   if (channel->tracking_data.code_phase_fine < 0.0f)
   {
     channel->tracking_data.code_phase_fine = 
       (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO) - channel->tracking_data.code_phase_fine;
   }
-  else if (channel->tracking_data.code_phase_fine > (float)(PRN_LENGTH * 2.0f * GPS_FINE_RATIO))
+  else if (channel->tracking_data.code_phase_fine > (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO))
   {
     channel->tracking_data.code_phase_fine =
-      channel->tracking_data.code_phase_fine - (float)(PRN_LENGTH * 2.0f * GPS_FINE_RATIO);
+      channel->tracking_data.code_phase_fine - (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO);
   }
   
+  //packet_cnt++;
+  //channel->tracking_data.code_phase_fine2 = (2039.8f - (float)packet_cnt * 0.001407) * 8.0f;
+  //channel->tracking_data.code_phase_fine2 = (64.5f + (float)packet_cnt * (1.0f / 30.0f / 8.0f)) * 8.0f;
+  //channel->tracking_data.code_phase_fine2 = (60.0f) * 8.0f;
+  
   channel->tracking_data.dll_code_err = code_err;
+  
+  //float tmp_code = channel->tracking_data.code_phase_fine2 / 8.0f;
+  //char tmp_txt[100];
+  //sprintf(tmp_txt, "error=%.02f fine code=%.02f\n", code_err, tmp_code);
+  //sprintf(tmp_txt, "%.02f\n", code_err);
+  //sprintf(tmp_txt, "%.02f\n", tmp_code);
+  //OutputDebugString((LPCSTR)tmp_txt);
 }
 
 
 void gps_pre_track_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
 {
-  if (index > TRACKING_CH_LENGTH)
+  if (index >= TRACKING_CH_LENGTH)
     return;
   
   gps_generate_prn_data2(channel, tmp_prn_data, 0);
   gps_shift_to_zero_freq(
-    data,
-    (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q,
-    (float)IF_FREQ_HZ + channel->tracking_data.if_freq_offset_hz);
+                         data,
+                         (uint8_t*)tmp_data_i, (uint8_t*)tmp_data_q,
+                         (float)IF_FREQ_HZ + channel->tracking_data.if_freq_offset_hz);
   
   uint16_t start_idx = channel->tracking_data.code_search_start + index * GPS_PRE_TRACK_STEP;
   uint16_t stop_idx = start_idx + GPS_PRE_TRACK_STEP;
@@ -302,7 +395,7 @@ void gps_pre_track_process(gps_ch_t* channel, uint8_t* data, uint8_t index)
       memset(channel->tracking_data.pre_track_phases, 0, PRE_TRACK_POINTS_MAX_CNT * 2);
     }
     
-    //printf(tmp_txt, "%d\n", pre_track_best_corr_phase);
+    //sprintf(tmp_txt, "%d\n", pre_track_best_corr_phase);
     
     pre_track_best_corr_value = 0;
   }
@@ -345,9 +438,11 @@ void gps_pre_tracking_process_data(gps_ch_t* channel, uint8_t points_cnt)
   
   if (found_code_phase)
   {
-    printf("FOUND TRACK PHASE=%d\n", found_code_phase);
+    //sprintf(tmp_txt, "FOUND TRACK PHASE=%d\n", found_code_phase);
     //convert to fine points
     channel->tracking_data.code_phase_fine = (float)((found_code_phase) * GPS_FINE_RATIO);
     channel->tracking_data.state = GPS_PRE_TRACK_DONE;
   }
 }
+
+

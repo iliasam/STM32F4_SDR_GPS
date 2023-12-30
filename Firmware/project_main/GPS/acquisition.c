@@ -9,7 +9,7 @@
 #include "config.h"
 
 #define FREQ_SEARCH_POINTS_MAX_CNT		25
-#define ACQ_CODE_SEARCH_TIMEOUT_MS              7000
+#define ACQ_CODE_SEARCH_TIMEOUT_MS              120000
 
 
 // Histogram, one item is for one freq. step, used for freq. search

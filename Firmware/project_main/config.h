@@ -37,13 +37,6 @@
 #define ACQ_PHASE1_HIST_STEP	(64)
 #define ACQ_PHASE1_HIST_SIZE	((PRN_LENGTH + 1) * 2 / ACQ_PHASE1_HIST_STEP) //32
 
-#define TRACKING_DLL1_C1        (1.0f)
-#define TRACKING_DLL1_C2        (300.0f)
-
-#define TRACKING_PLL1_C1        (10.0f)
-#define TRACKING_PLL1_C2        (1000.0f)
-#define TRACKING_FLL1	        (2000.0f)
-
 //#define IF_NCO_STEP_HZ        ((float)SPI_BAUDRATE_HZ / (float)(1 << 32)) //NCO accumulator is 32bit
 #define IF_NCO_STEP_HZ	        (0.003810972f)
 
@@ -52,6 +45,15 @@
 
 //Number of used satellites
 #define GPS_SAT_CNT	        4
+
+#define TRACKING_DLL1_C1        (1.0f)
+#define TRACKING_DLL1_C2        (300.0f)
+
+#define TRACKING_PLL1_C1        (4.0f)
+#define TRACKING_PLL1_C2        (3000.0f)
+
+#define TRACKING_FLL1_C1        (200.0f)
+#define TRACKING_FLL1_C2        (2000.0f)
 
 //--------------------------
 //Debug only

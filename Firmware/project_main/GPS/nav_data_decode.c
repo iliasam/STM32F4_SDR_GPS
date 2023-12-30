@@ -58,16 +58,7 @@ uint8_t gps_nav_data_decode_subframe(gps_ch_t* channel)
   //case 2: decode_subfrm2(buff, eph); break;
   //case 3: decode_subfrm3(buff, eph); break;
   }
-  printf("SUB ID=%ld\n", id);
-  
-  if (id == 1)
-  {
-    time_t cur_t = channel->eph_data.eph.ttr.time;
-    cur_t = cur_t - 18;
-    printf("Curr. Time = %s", ctime(&cur_t));
-  }
-    
-  
+  printf("PRN=%2d SUB ID=%ld\n", channel->prn,  id);
   
   return (uint8_t)id;
 }

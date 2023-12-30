@@ -29,7 +29,7 @@ volatile static uint32_t diff_main = 0;
 gps_ch_t gps_channels[GPS_SAT_CNT];
 
 /* Private function prototypes -----------------------------------------------*/
-void gps_new_data_handling(void);
+void main_process_acq_data(void);
 
 uint8_t need_slow_data_proc(void);
 void main_slow_data_proc(void);
@@ -52,7 +52,6 @@ int main(void)
   gps_channels[0].prn = 5;
   gps_channels[0].acq_data.given_freq_offset_hz = 900;
   gps_channell_prepare(&gps_channels[0]);
-  
   
   gps_channels[1].prn = 14;
   gps_channels[1].acq_data.given_freq_offset_hz = 4000;
@@ -93,22 +92,6 @@ int main(void)
 
 //*********************************
 
-void main_fast_data_proc(void)
-{
-  uint8_t* signal_p = signal_capture_get_ready_buf();
-  uint32_t time_cnt = signal_capture_get_packet_cnt();
-  
-  //A kind of simulation of 4 channel multiplexing
-  uint32_t index_big = time_cnt % (TRACKING_CH_LENGTH * GPS_SAT_CNT + 1); //real index, 0-16 range
-  uint32_t index = index_big % TRACKING_CH_LENGTH; //in 0-3 range
-  if (index_big == (TRACKING_CH_LENGTH * GPS_SAT_CNT))//dummy step
-    index = 0xFF;
-  
-  //So "index" can be 0-3 or 0xFF
-  gps_tracking_process(&gps_channels[0], signal_p, (uint8_t)index);
-}
-
-
 // Acqusition data capure and process - not realtime
 void main_slow_data_proc(void)
 {
@@ -127,9 +110,36 @@ void main_slow_data_proc(void)
   else
   {
     //have new data
-    gps_new_data_handling();
+    main_process_acq_data();
     signal_capture_need_data_copy();
   }
+}
+
+//Tracking
+void main_fast_data_proc(void)
+{
+  uint8_t* signal_p = signal_capture_get_ready_buf();
+  uint32_t time_cnt = signal_capture_get_packet_cnt();
+  
+  //4 channel multiplexing
+  uint32_t index_big = time_cnt % (TRACKING_CH_LENGTH * GPS_SAT_CNT + 1); //real index, 0-16 range
+  
+  uint8_t sat_index = index_big / TRACKING_CH_LENGTH;
+  if (sat_index >= GPS_SAT_CNT)
+    sat_index = 0;
+  
+  uint32_t index = 0;
+  if (index_big == (TRACKING_CH_LENGTH * GPS_SAT_CNT))
+    index = 0xFF;
+  else
+  {
+    index = index_big % TRACKING_CH_LENGTH;
+  }
+  
+  //"index" can be 0-3 or 0xFF
+  gps_tracking_process(&gps_channels[sat_index], signal_p, (uint8_t)index);
+  
+  gps_master_handling(gps_channels);
 }
 
 /*
@@ -145,12 +155,15 @@ uint8_t need_slow_data_proc(void)
 
 // Acquisition data process
 // Can be long!
-void gps_new_data_handling(void)
+void main_process_acq_data(void)
 {
   uint8_t* signal_p = signal_capture_get_copy_buf();
   acquisition_process(&gps_channels[0], signal_p);
   gps_master_handling(gps_channels);
 }
+
+
+
 ///////////////////////////////////
 
 /*

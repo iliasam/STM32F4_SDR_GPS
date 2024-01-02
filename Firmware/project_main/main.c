@@ -139,19 +139,9 @@ void main_fast_data_proc(void)
   //"index" can be 0-3 or 0xFF
   gps_tracking_process(&gps_channels[sat_index], signal_p, (uint8_t)index);
   
-  gps_master_handling(gps_channels);
+  gps_master_handling(gps_channels, index);
 }
 
-/*
-//Return 1 when acq. data processing is needed
-uint8_t need_slow_data_proc(void)
-{
-  if (gps_channels[0].acq_data.state < GPS_ACQ_CODE_PHASE_SEARCH3_DONE)
-    return 1;
-  
-  return 0;
-}
-*/
 
 // Acquisition data process
 // Can be long!
@@ -159,10 +149,8 @@ void main_process_acq_data(void)
 {
   uint8_t* signal_p = signal_capture_get_copy_buf();
   acquisition_process(&gps_channels[0], signal_p);
-  gps_master_handling(gps_channels);
+  gps_master_handling(gps_channels, 0);
 }
-
-
 
 ///////////////////////////////////
 

@@ -27,7 +27,7 @@ void gps_master_nav_handling(gps_ch_t* channels);
 //****************************************************
 //****************************************************
 
-void gps_master_handling(gps_ch_t* channels)
+void gps_master_handling(gps_ch_t* channels, uint8_t index)
 {
   gps_ch_t* curr_ch = channels;
   

@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include "gps_misc.h"
 
-void gps_master_handling(gps_ch_t* channels);
+void gps_master_handling(gps_ch_t* channels, uint8_t index);
 uint8_t gps_master_need_acq(void);
 uint8_t gps_master_need_freq_search(gps_ch_t* channels);
 

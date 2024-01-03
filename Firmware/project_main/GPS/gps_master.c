@@ -2,6 +2,8 @@
 #include "string.h"
 #include "stdlib.h"
 #include "stdio.h"
+//#include "delay_us_timer.h"
+#include "signal_capture.h"
 
 #include "gps_master.h"
 #include "config.h"
@@ -9,18 +11,28 @@
 #include "math.h"
 #include "time.h"
 
+#if (ENABLE_RTCM_SEND)
+  #include "obs_publish.h"
+#endif
+
+
 #define GPS_OFFSET_TIME_MS      (68.802)
 #define CLIGHT		        299792458.0      /* speed of light (m/s) */
 #define CLIGHT_NORM	        (299792458.0 / PRN_SPEED_HZ)
+#define SUBFRAME_LENGTH_MS	(6000)
 
 
-//obsd_t obsd[4];
+#if (ENABLE_RTCM_SEND)
+  obsd_t obsd[GPS_SAT_CNT];
+#endif
 
 //******************************************************************
 //Flag that at least one sat. need acquisition
 uint8_t gps_common_need_acq = 1;
 
 uint8_t gps_start_flag = 1;
+
+volatile static uint32_t diff;
 
 void gps_master_nav_handling(gps_ch_t* channels);
 
@@ -95,11 +107,12 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     }
   }
   
-  //gps_master_nav_handling(channels);
+  if (index == 0xFF) //dummy tracking
+    gps_master_nav_handling(channels);
 }
 
 
-/*
+
 void gps_master_nav_handling(gps_ch_t* channels)
 {
   //Set first subframe detection time for all channels
@@ -157,6 +170,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
   }
   
   //************************************************
+  //Pseudorange calculation
   
   if (channels[0].nav_data.first_subframe_time == 0)
     return;
@@ -182,7 +196,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
     channels[i].tracking_data.old_code_phase_fine = channels[i].tracking_data.code_phase_fine;
   }
   
-  uint32_t curr_tick_time = gps_sim_get_prn_cnt();
+  uint32_t curr_tick_time = signal_capture_get_packet_cnt();
   //Time from last subframe of REF sat.
   int32_t time_diff_ms = (int32_t)curr_tick_time - (int32_t)channels[ref_idx].nav_data.last_subframe_time;
   if ((time_diff_ms < 0))
@@ -206,14 +220,16 @@ void gps_master_nav_handling(gps_ch_t* channels)
     channels[i].obs_data.tow_s = channels[ref_idx].eph_data.tow_gpst + ((float)time_diff_ms / PRN_SPEED_HZ);
   }
   
-  static long prevTickValue = 0;
-  unsigned long currTime = GetTickCount();
-  if ((currTime - prevTickValue) > 100)
+
+  static uint32_t prev_obs_send_time_ms = 0;
+  uint32_t curr_time_ms = signal_capture_get_packet_cnt();
+  if ((curr_time_ms - prev_obs_send_time_ms) > 200)
   {
-    prevTickValue = currTime;
-    sdrobs2obsd(channels, 4, obsd);
-    sendrtcmobs(obsd, 4);
+    prev_obs_send_time_ms = curr_time_ms;
+    sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
+    sendrtcmobs(obsd, GPS_SAT_CNT);
     
+    /*
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
     {
       if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subrame 1,2,3
@@ -222,9 +238,10 @@ void gps_master_nav_handling(gps_ch_t* channels)
         channels[i].eph_data.received_mask &= ~0x7;//clear mask
       }
     }
+    */
   }
+  
 }
-*/
 
 uint8_t gps_master_need_freq_search(gps_ch_t* channels)
 {
@@ -255,3 +272,4 @@ uint8_t gps_master_need_acq(void)
 {
   return gps_common_need_acq;
 }
+

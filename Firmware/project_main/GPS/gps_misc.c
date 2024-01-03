@@ -2,15 +2,12 @@
 #include "config.h"
 #include "stdint.h"
 #include <math.h>
-#include "delay_us_timer.h"
+//#include "delay_us_timer.h"
 #include "intrinsics.h"
 #include "string.h"
 #include "common_ram.h"
 
-volatile static uint32_t diff;
-
 uint8_t gps_summ_table16[65536];
-
 uint8_t gps_summ16(uint16_t data);
 
 void gps_generate_prn(uint8_t* dest, int prn);

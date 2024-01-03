@@ -988,6 +988,12 @@
       <name>$PROJ_DIR$\..\GPS\nav_data_decode.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\GPS\obs_publish.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\GPS\rtcm3e.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\GPS\tracking.c</name>
     </file>
   </group>
@@ -1055,6 +1061,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\system_stm32f4xx.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\uart_comm.c</name>
     </file>
   </group>
 </project>

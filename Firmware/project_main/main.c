@@ -12,10 +12,15 @@
 #include "acquisition.h"
 #include "tracking.h"
 #include "gps_master.h"
+#include "uart_comm.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+
+#if (ENABLE_RTCM_SEND)
+  #include "obs_publish.h"
+#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -64,7 +69,8 @@ int main(void)
   gps_channels[3].prn = 30;
   gps_channels[3].acq_data.given_freq_offset_hz = 2000;
   gps_channell_prepare(&gps_channels[3]);
-                
+  
+  uart_init();
   signal_capture_init();
   
   signal_capture_need_data_copy();

@@ -28,6 +28,8 @@
 #define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 words
 #define PRN_LENGTH              1023
 
+#define ENABLE_RTCM_SEND        1
+
 
 
 #define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
@@ -57,6 +59,31 @@
 
 #define TRACKING_FLL1_C1        (200.0f)
 #define TRACKING_FLL1_C2        (2000.0f)
+
+//PRIMARY UART
+
+#define PRIMARY_UART_NAME       USART2
+#define PRIMARY_UART_AF_NAME    GPIO_AF_USART2
+#define PRIMARY_UART_BAUDRATE   115200
+
+#define PRIMARY_UART_GPIO_CLK   RCC_AHB1Periph_GPIOA
+#define PRIMARY_UART_CLK        RCC_APB1Periph_USART2
+
+#define PRIMARY_UART_RX_PIN     GPIO_Pin_3
+#define PRIMARY_UART_RX_PIN_SRC GPIO_PinSource3
+#define PRIMARY_UART_RX_GPIO    GPIOA
+
+#define PRIMARY_UART_TX_PIN     GPIO_Pin_2
+#define PRIMARY_UART_TX_PIN_SRC GPIO_PinSource2
+#define PRIMARY_UART_TX_GPIO    GPIOA
+
+#define PRIMARY_UART_IRQ_HANDLER      USART2_IRQHandler
+
+#define PRIMARY_DMA_RCC         RCC_AHB1Periph_DMA1
+#define PRIMARY_DMA_TX_STREAM   DMA1_Stream6
+#define PRIMARY_DMA_FLAG        DMA_FLAG_TCIF6
+#define PRIMARY_DMA_TX_CH       DMA_Channel_4
+
 
 //--------------------------
 //Debug only

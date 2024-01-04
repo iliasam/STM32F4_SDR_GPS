@@ -99,10 +99,10 @@ void uart_prim_init_dma(void)
 }
 
 
-void uart_prim_dma_send_data(uint8_t* data, uint16_t size)
+uint8_t uart_prim_dma_send_data(uint8_t* data, uint16_t size)
 {
-  if (PRIMARY_DMA_TX_STREAM->NDTR > 0)
-    return;
+  if (uart_prim_is_busy())
+    return 0;
   
   DMA_Cmd(PRIMARY_DMA_TX_STREAM, DISABLE);
   
@@ -110,6 +110,7 @@ void uart_prim_dma_send_data(uint8_t* data, uint16_t size)
   PRIMARY_DMA_TX_STREAM->NDTR = size;
   PRIMARY_DMA_TX_STREAM->M0AR = (uint32_t)data;
   DMA_Cmd(PRIMARY_DMA_TX_STREAM, ENABLE);
+  return 1;
 }
 
 uint8_t uart_prim_is_busy(void)

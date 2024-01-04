@@ -4,7 +4,7 @@
 #include "stdio.h"
 //#include "delay_us_timer.h"
 #include "signal_capture.h"
-
+#include "uart_comm.h"
 #include "gps_master.h"
 #include "config.h"
 #include "acquisition.h"
@@ -35,6 +35,7 @@ uint8_t gps_start_flag = 1;
 volatile static uint32_t diff;
 
 void gps_master_nav_handling(gps_ch_t* channels);
+void gps_master_transmit_obs(gps_ch_t* channels);
 
 //****************************************************
 //****************************************************
@@ -220,27 +221,34 @@ void gps_master_nav_handling(gps_ch_t* channels)
     channels[i].obs_data.tow_s = channels[ref_idx].eph_data.tow_gpst + ((float)time_diff_ms / PRN_SPEED_HZ);
   }
   
+  gps_master_transmit_obs(channels);
+}
 
+
+void gps_master_transmit_obs(gps_ch_t* channels)
+{
   static uint32_t prev_obs_send_time_ms = 0;
+  
+  if (uart_prim_is_busy())
+    return;
+  
+  for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
+  {
+    if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subrame 1,2,3
+    {
+      channels[i].eph_data.received_mask &= ~0x7;//clear mask
+      sendrtcmnav(&channels[i]);
+      return;//wait for UART TX
+    }
+  }
+  
   uint32_t curr_time_ms = signal_capture_get_packet_cnt();
   if ((curr_time_ms - prev_obs_send_time_ms) > 200)
   {
     prev_obs_send_time_ms = curr_time_ms;
     sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
     sendrtcmobs(obsd, GPS_SAT_CNT);
-    
-    /*
-    for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
-    {
-      if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subrame 1,2,3
-      {
-        sendrtcmnav(&channels[i]);
-        channels[i].eph_data.received_mask &= ~0x7;//clear mask
-      }
-    }
-    */
   }
-  
 }
 
 uint8_t gps_master_need_freq_search(gps_ch_t* channels)
@@ -271,5 +279,18 @@ uint8_t gps_master_is_code_search3(gps_ch_t* channels)
 uint8_t gps_master_need_acq(void)
 {
   return gps_common_need_acq;
+}
+
+void gps_master_test(gps_ch_t* channels)
+{
+  static uint8_t cnt = 0;
+  if (uart_prim_is_busy())
+    return;
+
+  cnt++;
+  if (cnt >= 4)
+    cnt = 0;
+  
+  sendrtcmnav(&channels[cnt]);
 }
 

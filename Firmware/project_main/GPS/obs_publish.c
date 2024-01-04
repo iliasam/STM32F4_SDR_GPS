@@ -17,6 +17,8 @@
 #define CODE_L1C	1
 #define RTCM3PREAMB     0xD3        /* rtcm ver.3 frame preamble */
 
+//Need to be static becase TX data for DMA is stored here
+rtcm_t rtcm_data = { 0 };
 
 static const unsigned int tbl_CRC24Q[] = {
   0x000000,0x864CFB,0x8AD50D,0x0C99F6,0x93E6E1,0x15AA1A,0x1933EC,0x9F7F17,
@@ -72,6 +74,7 @@ void sdrobs2obsd(gps_ch_t* channels, int ns, obsd_t *out)
     out[i].L[0] = 0;
     out[i].D[0] = (float)channels[i].tracking_data.if_freq_offset_hz;
     out[i].SNR[0] = (unsigned char)(channels[i].tracking_data.snr_value + 20.0f) * 4;
+    out[i].LLI[0] = 0;
     
     // signal type 
     out[i].code[0] = CODE_L1C;
@@ -81,28 +84,27 @@ void sdrobs2obsd(gps_ch_t* channels, int ns, obsd_t *out)
 
 void sendrtcmobs(obsd_t *obsd, int nsat)
 {
-  rtcm_t rtcm = { 0 };
-  init_rtcm(&rtcm);
+  init_rtcm(&rtcm_data);
   
-  rtcm.time = obsd[0].time;
-  rtcm.obs.n = nsat;
-  rtcm.obs.data = obsd;
+  rtcm_data.time = obsd[0].time;
+  rtcm_data.obs.n = nsat;
+  rtcm_data.obs.data = obsd;
   
   /* GPS rtcm msm */
-  gen_rtcm3(&rtcm, 1075,0);
+  gen_rtcm3(&rtcm_data, 1075,0);
   
-  uart_prim_dma_send_data(rtcm.buff, rtcm.nbyte);
+  uart_prim_dma_send_data(rtcm_data.buff, rtcm_data.nbyte);
 }
 
 void sendrtcmnav(gps_ch_t* channel)
 {
-  rtcm_t rtcm = { 0 };
-  init_rtcm(&rtcm);
+  memset(&rtcm_data, 0, sizeof(rtcm_data));
+  init_rtcm(&rtcm_data);
+  rtcm_data.eph = &channel->eph_data.eph;
+  rtcm_data.ephsat = channel->prn;
   
-  rtcm.eph = &channel->eph_data.eph;
-  gen_rtcm3(&rtcm, 1019, 0); /* rtcm generation */
-  
-  uart_prim_dma_send_data(rtcm.buff, rtcm.nbyte);
+  gen_rtcm3(&rtcm_data, 1019, 0); /* rtcm generation */
+  uart_prim_dma_send_data(rtcm_data.buff, rtcm_data.nbyte);
 }
 
 unsigned int crc24q(const unsigned char *buff, int len)

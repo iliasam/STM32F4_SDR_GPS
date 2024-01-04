@@ -310,7 +310,7 @@ void gps_nav_data_words_detection(gps_ch_t* channel, uint8_t new_bit)
         if (channel->nav_data.polarity_found == 0)
         {
           channel->nav_data.polarity_found = 1;
-          //printf("POLAR. FOUND\n");
+          printf("PRN=%d POLAR. FOUND\n", channel->prn);
         }
         
         //Full subframe collected

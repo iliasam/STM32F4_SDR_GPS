@@ -74,7 +74,7 @@ int main(void)
   signal_capture_init();
   
   signal_capture_need_data_copy();
-  
+
   while(1)
   {
     uint8_t need_slow = gps_master_need_acq();

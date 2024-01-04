@@ -30,28 +30,29 @@ typedef struct {        /* observation data */
 
 
 typedef struct {        /* RTCM control struct type */
-	int staid;          /* station id */
-	int stah;           /* station health */
-	int seqno;          /* sequence number for rtcm 2 or iods msm */
-	int outtype;        /* output message type */
-	gtime_t time;       /* message time */
-	gtime_t time_s;     /* message start time */
-	obs_t obs; /* observation data (uncorrected) */
-	eph_t *eph;         /* satellite ephemerides */
-	char msg[128];      /* special message */
-	char msgtype[256];  /* last message type */
-	char msmtype[6][128]; /* msm signal types */
-	int obsflag;        /* obs data complete flag (1:ok,0:not complete) */
-	double cp[MAXSAT][NFREQ + NEXOBS]; /* carrier-phase measurement */
-	unsigned char lock[MAXSAT][NFREQ + NEXOBS]; /* lock time */
-	unsigned char loss[MAXSAT][NFREQ + NEXOBS]; /* loss of lock count */
-	gtime_t lltime[NSATGPS][NFREQ + NEXOBS]; /* last lock time */
-	int nbyte;          /* number of bytes in message buffer */
-	int nbit;           /* number of bits in word buffer */
-	int len;            /* message length (bytes) */
-	unsigned char buff[1200]; /* message buffer */
-	//unsigned int word;  /* word buffer for rtcm 2 */
-	char opt[256];      /* RTCM dependent options */
+  int staid;          /* station id */
+  int stah;           /* station health */
+  int seqno;          /* sequence number for rtcm 2 or iods msm */
+  int outtype;        /* output message type */
+  gtime_t time;       /* message time */
+  gtime_t time_s;     /* message start time */
+  obs_t obs; /* observation data (uncorrected) */
+  eph_t *eph;         /* satellite ephemerides */
+  int ephsat;         /* update satellite of ephemeris */
+  char msg[128];      /* special message */
+  char msgtype[256];  /* last message type */
+  char msmtype[6][128]; /* msm signal types */
+  int obsflag;        /* obs data complete flag (1:ok,0:not complete) */
+  double cp[MAXSAT][NFREQ + NEXOBS]; /* carrier-phase measurement */
+  unsigned char lock[MAXSAT][NFREQ + NEXOBS]; /* lock time */
+  unsigned char loss[MAXSAT][NFREQ + NEXOBS]; /* loss of lock count */
+  gtime_t lltime[NSATGPS][NFREQ + NEXOBS]; /* last lock time */
+  int nbyte;          /* number of bytes in message buffer */
+  int nbit;           /* number of bits in word buffer */
+  int len;            /* message length (bytes) */
+  unsigned char buff[300]; /* message buffer */
+  //unsigned int word;  /* word buffer for rtcm 2 */
+  char opt[256];      /* RTCM dependent options */
 } rtcm_t;
 
 void setbitu(unsigned char *buff, int pos, int len, unsigned int data);

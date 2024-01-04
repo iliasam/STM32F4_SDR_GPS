@@ -237,6 +237,8 @@ static int encode_type1019(rtcm_t *rtcm, int sync)
     int i=24,prn,week,toe,toc,i0,OMG0,omg,M0,deln,idot,OMGd,crs,crc;
     int cus,cuc,cis,cic,af0,af1,af2,tgd;
 
+    if (satsys(rtcm->ephsat, &prn) != SYS_GPS) 
+      return 0;
     week=eph->week%1024;
     toe  =ROUND(eph->toes/16.0);
     toc  =ROUND(time2gpst(eph->toc,NULL)/16.0);
@@ -725,13 +727,13 @@ static int encode_msm5(rtcm_t *rtcm, int sys, int sync)
 /* encode rtcm ver.3 message -------------------------------------------------*/
 int encode_rtcm3(rtcm_t *rtcm, int type, int sync)
 {
-    int ret=0;
-
-    switch (type)
-	{
-		case 1019: ret = encode_type1019(rtcm, sync);     break;
-		case 1074: ret = encode_msm4(rtcm, SYS_GPS, sync); break;
-		case 1075: ret = encode_msm5(rtcm, SYS_GPS, sync); break;
-    }
-    return ret;
+  int ret=0;
+  
+  switch (type)
+  {
+  case 1019: ret = encode_type1019(rtcm, sync);     break;
+  case 1074: ret = encode_msm4(rtcm, SYS_GPS, sync); break;
+  case 1075: ret = encode_msm5(rtcm, SYS_GPS, sync); break;
+  }
+  return ret;
 }

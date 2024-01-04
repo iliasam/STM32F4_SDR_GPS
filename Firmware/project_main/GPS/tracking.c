@@ -13,7 +13,7 @@
 #define PLL_BAD_STATE_DETECTION_THRESHOLD       (80)
 
 //In code steps
-#define GPS_PRE_TRACK_ZONE      (24)
+#define GPS_PRE_TRACK_ZONE      (30)
 #define GPS_PRE_TRACK_STEP      (GPS_PRE_TRACK_ZONE / TRACKING_CH_LENGTH)
 
 //One byte is 8bit, one byte is 0.5 of chip

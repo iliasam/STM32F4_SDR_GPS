@@ -13,7 +13,7 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void uart_init(void);
-void uart_prim_dma_send_data(uint8_t* data, uint16_t size);
+uint8_t uart_prim_dma_send_data(uint8_t* data, uint16_t size);
 uint8_t uart_prim_is_busy(void);
 
 #endif /* __UART_COMM_H */

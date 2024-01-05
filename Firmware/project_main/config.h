@@ -39,6 +39,8 @@
 #define ACQ_PHASE1_HIST_STEP	(64)
 #define ACQ_PHASE1_HIST_SIZE	((PRN_LENGTH + 1) * 2 / ACQ_PHASE1_HIST_STEP) //32
 
+#define PRE_TRACK_POINTS_MAX_CNT        30
+
 //#define IF_NCO_STEP_HZ        ((float)SPI_BAUDRATE_HZ / (float)(1 << 32)) //NCO accumulator is 32bit
 #define IF_NCO_STEP_HZ	        (0.003810972f)
 

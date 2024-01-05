@@ -29,7 +29,7 @@
 
 
 
-static const char rcsid[]="$Id:$";
+//static const char rcsid[]="$Id:$";
 
 /* constants and macros ------------------------------------------------------*/
 
@@ -47,7 +47,7 @@ static const char rcsid[]="$Id:$";
 
 
 
-const static double gpst0[] = { 1980,1, 6,0,0,0 }; /* gps time reference */
+//const static double gpst0[] = { 1980,1, 6,0,0,0 }; /* gps time reference */
 
 const char *obscodes[] = {       /* observation code strings */
 
@@ -135,24 +135,9 @@ char *code2obs(unsigned char code, int *freq)
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-/* ssr update intervals ------------------------------------------------------*/
-static const double ssrudint[16]={
-    1,2,5,10,15,30,60,120,240,300,600,900,1800,3600,7200,10800
-};
-/* set sign-magnitude bits ---------------------------------------------------*/
-static void setbitg(unsigned char *buff, int pos, int len, int value)
-{
-    setbitu(buff,pos,1,value<0?1:0);
-    setbitu(buff,pos+1,len-1,value<0?-value:value);
-}
-/* set signed 38 bit field ---------------------------------------------------*/
-static void set38bits(unsigned char *buff, int pos, double value)
-{
-    int word_h=(int)floor(value/64.0);
-    unsigned int word_l=(unsigned int)(value-word_h*64.0);
-    setbits(buff,pos  ,32,word_h);
-    setbitu(buff,pos+32,6,word_l);
-}
+
+
+
 
 double timediff(gtime_t t1, gtime_t t2)
 {
@@ -200,33 +185,7 @@ static int to_msm_lock(int lock)
     if (lock<524288) return 14;
     return 15;
 }
-/* msm lock time indicator with extended-resolution (ref [11] table 3.4-1E) --*/
-static int to_msm_lock_ex(int lock)
-{
-    if (lock<0       ) return 0;
-    if (lock<64      ) return lock;
-    if (lock<128     ) return (lock+64       )/2;
-    if (lock<256     ) return (lock+256      )/4;
-    if (lock<512     ) return (lock+768      )/8;
-    if (lock<1024    ) return (lock+2048     )/16;
-    if (lock<2048    ) return (lock+5120     )/32;
-    if (lock<4096    ) return (lock+12288    )/64;
-    if (lock<8192    ) return (lock+28672    )/128;
-    if (lock<16384   ) return (lock+65536    )/256;
-    if (lock<32768   ) return (lock+147456   )/512;
-    if (lock<65536   ) return (lock+327680   )/1024;
-    if (lock<131072  ) return (lock+720896   )/2048;
-    if (lock<262144  ) return (lock+1572864  )/4096;
-    if (lock<524288  ) return (lock+3407872  )/8192;
-    if (lock<1048576 ) return (lock+7340032  )/16384;
-    if (lock<2097152 ) return (lock+15728640 )/32768;
-    if (lock<4194304 ) return (lock+33554432 )/65536;
-    if (lock<8388608 ) return (lock+71303168 )/131072;
-    if (lock<16777216) return (lock+150994944)/262144;
-    if (lock<33554432) return (lock+318767104)/524288;
-    if (lock<67108864) return (lock+671088640)/1048576;
-    return 704;
-}
+
 
 
 /* encode type 1019: gps ephemerides -----------------------------------------*/
@@ -453,9 +412,9 @@ static int encode_msm_head(int type, rtcm_t *rtcm, int sys, int sync, int *nsat,
                            double *rate, int *lock, unsigned char *half,
                            float *cnr)
 {
-	double tow;
+	//double tow;
 	unsigned char sat_ind[64] = { 0 }, sig_ind[32] = { 0 }, cell_ind[32 * 64] = { 0 };
-	unsigned int dow, epoch;
+	unsigned int epoch;
 	int i = 24, j, tt, nsig = 0;
 
 	type += 1070;
@@ -594,17 +553,9 @@ static int encode_msm_lock(rtcm_t *rtcm, int i, const int *lock, int ncell)
     }
     return i;
 }
-/* encode lock-time indicator with extended range and resolution -------------*/
-static int encode_msm_lock_ex(rtcm_t *rtcm, int i, const int *lock, int ncell)
-{
-    int j,lock_val;
-    
-    for (j=0;j<ncell;j++) {
-        lock_val=to_msm_lock_ex(lock[j]);
-        setbitu(rtcm->buff,i,10,lock_val); i+=10;
-    }
-    return i;
-}
+
+
+
 /* encode half-cycle-ambiguity indicator -------------------------------------*/
 static int encode_msm_half_amb(rtcm_t *rtcm, int i, const unsigned char *half,
                                int ncell)

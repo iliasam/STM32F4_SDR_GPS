@@ -5,7 +5,7 @@
 #include <time.h>
 #include "config.h"
 
-#define PRE_TRACK_POINTS_MAX_CNT        40
+
 #define GPS_NAV_WORD_LENGTH	        30 //Length in bits
 #define GPS_NAV_SUBFRAME_LENGTH_BYTES	38 //(300/8=38byte)
 

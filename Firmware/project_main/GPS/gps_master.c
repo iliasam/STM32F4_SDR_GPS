@@ -6,6 +6,7 @@
 #include "signal_capture.h"
 #include "uart_comm.h"
 #include "gps_master.h"
+#include "print_state.h"
 #include "config.h"
 #include "acquisition.h"
 #include "math.h"
@@ -70,6 +71,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
   {
     for (uint8_t i = 0; i < (GPS_SAT_CNT - 1); i++)
     {
+      //If next channel need freq. search
       if ((channels[i].acq_data.state == GPS_ACQ_FREQ_SEARCH_DONE) &&
           (channels[i + 1].acq_data.state == GPS_ACQ_NEED_FREQ_SEARCH))
       {
@@ -108,8 +110,22 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     }
   }
   
+  if (gps_common_need_acq)
+  {
+    print_state_update_acquisition(channels, signal_capture_get_packet_cnt());
+    print_state_handling(signal_capture_get_packet_cnt());
+  }
+  
   if (index == 0xFF) //dummy tracking
+  {
     gps_master_nav_handling(channels);
+    
+    if (gps_common_need_acq == 0)
+    {
+      print_state_handling(signal_capture_get_packet_cnt());
+      print_state_update_tracking(channels, signal_capture_get_packet_cnt());
+    }
+  }
 }
 
 
@@ -221,10 +237,12 @@ void gps_master_nav_handling(gps_ch_t* channels)
     channels[i].obs_data.tow_s = channels[ref_idx].eph_data.tow_gpst + ((float)time_diff_ms / PRN_SPEED_HZ);
   }
   
-  gps_master_transmit_obs(channels);
+  #if (ENABLE_RTCM_SEND)
+    gps_master_transmit_obs(channels);
+  #endif
 }
 
-
+#if (ENABLE_RTCM_SEND)
 void gps_master_transmit_obs(gps_ch_t* channels)
 {
   static uint32_t prev_obs_send_time_ms = 0;
@@ -250,6 +268,7 @@ void gps_master_transmit_obs(gps_ch_t* channels)
     sendrtcmobs(obsd, GPS_SAT_CNT);
   }
 }
+#endif //#if (ENABLE_RTCM_SEND)
 
 uint8_t gps_master_need_freq_search(gps_ch_t* channels)
 {

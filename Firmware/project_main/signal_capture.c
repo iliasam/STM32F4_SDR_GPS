@@ -31,7 +31,7 @@ void init_dma(void);
 
 //************************************************************************
 
-// Return count of received data blocks
+// Return count of received data blocks, analog of system time
 uint32_t signal_capture_get_packet_cnt(void)
 {
   return signal_capture_packet_cnt;

@@ -13,6 +13,7 @@
 #include "tracking.h"
 #include "gps_master.h"
 #include "uart_comm.h"
+#include "print_state.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -74,6 +75,8 @@ int main(void)
   signal_capture_init();
   
   signal_capture_need_data_copy();
+  print_state_prepare(gps_channels);
+  
 
   while(1)
   {

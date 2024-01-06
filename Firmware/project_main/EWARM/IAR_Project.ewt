@@ -1141,6 +1141,9 @@
       <name>$PROJ_DIR$\..\main.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\print_state.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\signal_capture.c</name>
     </file>
     <file>

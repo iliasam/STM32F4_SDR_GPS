@@ -51,7 +51,7 @@ void acquisition_single_freq_check_reset(void)
   acq_histogram_cnt = 0;
 }
 
-
+//Start freq. search if it is needed
 void acquisition_start_channel(gps_ch_t* channel)
 {
   if (channel->acq_data.state == GPS_ACQ_NEED_FREQ_SEARCH)

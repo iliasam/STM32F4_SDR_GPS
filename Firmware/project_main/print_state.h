@@ -1,9 +1,10 @@
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __UART_COMM_H
-#define __UART_COMM_H
+#ifndef __PRINT_STATE_H
+#define __PRINT_STATE_H
 
 /* Includes ------------------------------------------------------------------*/
+#include "gps_misc.h"
 #include <stdio.h>
 #include <stdint.h>
 
@@ -12,10 +13,10 @@
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-void uart_init(void);
-uint8_t uart_prim_dma_send_data(uint8_t* data, uint16_t size);
-uint8_t uart_second_dma_send_data(uint8_t* data, uint16_t size);
-uint8_t uart_prim_is_busy(void);
-uint8_t uart_second_is_busy(void);
+void print_state_init(void);
+void print_state_handling(uint32_t time_ms);
+void print_state_prepare(gps_ch_t* channels);
+void print_state_update_acquisition(gps_ch_t* channels, uint32_t time_ms);
+void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms);
 
-#endif /* __UART_COMM_H */
+#endif /* __PRINT_STATE_H */

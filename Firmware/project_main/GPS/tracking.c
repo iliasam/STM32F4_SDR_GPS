@@ -301,8 +301,8 @@ void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
 
 void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, int16_t IL, int16_t QL)
 {
-  static float avr_summ = 0.0f;
-  static uint8_t summ_cnt = 0;
+  //static float avr_summ = 0.0f;
+  //static uint8_t summ_cnt = 0;
   //static int packet_cnt = 0;
   
   int32_t IE2 = (int32_t)IE * (int32_t)IE;

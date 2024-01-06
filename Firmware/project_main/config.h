@@ -19,14 +19,13 @@
 #define SPI_AFIO                GPIO_AF_SPI2
 #define SPI_GPIO                GPIOB
 
-#define SIM_PRN_CODE            1
 
 #define IF_FREQ_HZ              (int)(4092000)
 #define SPI_BAUDRATE_HZ         (int)(16368000)
 #define PRN_SPEED_HZ            1000 //1ms period
 #define BITS_IN_PRN             (SPI_BAUDRATE_HZ / PRN_SPEED_HZ) //16Kbit
-#define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 words
-#define PRN_LENGTH              1023
+#define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 16bit words
+#define PRN_LENGTH              1023 //in chips
 
 #define ENABLE_RTCM_SEND        1
 
@@ -62,6 +61,8 @@
 #define TRACKING_FLL1_C1        (200.0f)
 #define TRACKING_FLL1_C2        (2000.0f)
 
+//*************************************************************************
+
 //PRIMARY UART
 
 #define PRIMARY_UART_NAME       USART2
@@ -85,6 +86,30 @@
 #define PRIMARY_DMA_TX_STREAM   DMA1_Stream6
 #define PRIMARY_DMA_FLAG        DMA_FLAG_TCIF6
 #define PRIMARY_DMA_TX_CH       DMA_Channel_4
+
+//SECONDARY UART
+
+#define SECONDARY_UART_NAME     USART3
+#define SECONDARY_UART_AF_NAME  GPIO_AF_USART3
+#define SECONDARY_UART_BAUDRATE 115200
+
+#define SECONDARY_UART_GPIO_CLK RCC_AHB1Periph_GPIOD
+#define SECONDARY_UART_CLK      RCC_APB1Periph_USART3
+
+#define SECONDARY_UART_RX_PIN   GPIO_Pin_9
+#define SECONDARY_UART_RX_PIN_SRC GPIO_PinSource9
+#define SECONDARY_UART_RX_GPIO  GPIOD
+
+#define SECONDARY_UART_TX_PIN   GPIO_Pin_8
+#define SECONDARY_UART_TX_PIN_SRC GPIO_PinSource8
+#define SECONDARY_UART_TX_GPIO  GPIOD
+
+#define SECONDARY_UART_IRQ_HANDLER      USART3_IRQHandler
+
+#define SECONDARY_DMA_RCC       RCC_AHB1Periph_DMA1
+#define SECONDARY_DMA_TX_STREAM DMA1_Stream4
+#define SECONDARY_DMA_FLAG      DMA_FLAG_TCIF4
+#define SECONDARY_DMA_TX_CH     DMA_Channel_7
 
 
 //--------------------------

@@ -83,27 +83,42 @@ void print_state_prepare(gps_ch_t* channels)
   
   gotoxy(1,6);
   clr_line();
-  debug_print("SYS RUNTIME: %.1fs\n", 0.0f);
+  debug_print("SYS RUNTIME: %.1f s\n", 0.0f);
 }
 
 //Called from gps_master when acq. is running
 void print_state_update_acquisition(gps_ch_t* channels, uint32_t time_ms)
 {
   static gps_acq_state_t prev_state[GPS_SAT_CNT];
+  uint8_t changed_flag = 0;
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
     if (channels[i].acq_data.state != prev_state[i])//check if state get changed
     {
       print_state_update_acquisition_line(&channels[i], i);
       prev_state[i] = channels[i].acq_data.state;
-      return;
+      changed_flag = 1;
+      break;
+    }
+  }
+  
+  //Update the channel that is scaned now
+  if (changed_flag == 0)
+  {
+    for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
+    {
+      if (channels[i].acq_data.state == GPS_ACQ_FREQ_SEARCH_RUN)
+      {
+        print_state_update_acquisition_line(&channels[i], i);
+        break;
+      }
     }
   }
   
   gotoxy(1,6);
   clr_line();
   float time = (float)time_ms / 1000.0f;
-  debug_print("SYS RUNTIME: %.1fs\n", time);
+  debug_print("SYS RUNTIME: %.1f s\n", time);
 }
 
 //Called from gps_master when tracking is running
@@ -129,7 +144,7 @@ void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
   gotoxy(1,6);
   clr_line();
   float time = (float)time_ms / 1000.0f;
-  debug_print("SYS RUNTIME: %.1fs\n", time);
+  debug_print("SYS RUNTIME: %.1f s\n", time);
   
   if (cur_time > 0)
   {
@@ -203,7 +218,7 @@ void print_state_acquisition_channel(gps_ch_t* channel, uint8_t ch_idx)
     debug_print("ACQ NEED FREQ_SEARCH ");
     break;
   case GPS_ACQ_FREQ_SEARCH_RUN:
-    debug_print("ACQ FREQ_SEARCH ");
+    debug_print("ACQ FREQ_SEARCH_RUN << ");
     break;
     
   case GPS_ACQ_FREQ_SEARCH_DONE:
@@ -233,9 +248,16 @@ void print_state_acquisition_channel(gps_ch_t* channel, uint8_t ch_idx)
     break;
   }
   
-  if (channel->acq_data.state >= GPS_ACQ_CODE_PHASE_SEARCH1)
+  if (channel->acq_data.state == GPS_ACQ_FREQ_SEARCH_RUN)
   {
-    debug_print("FREQ=%d Hz", channel->acq_data.found_freq_offset_hz);
+    uint16_t curr_f_idx = channel->acq_data.freq_index;
+    uint16_t acq_percent = curr_f_idx * 100 / ACQ_COUNT;
+    debug_print("SCAN: %d%%", acq_percent);
+  }
+  
+  if (channel->acq_data.state >= GPS_ACQ_FREQ_SEARCH_DONE)
+  {
+    debug_print("FREQ=%5d Hz", channel->acq_data.found_freq_offset_hz);
   }
 }
 

@@ -33,6 +33,8 @@
 
 #define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
 #define ACQ_SEARCH_STEP_HZ      (500)
+/// Number of freq steps
+#define ACQ_COUNT       (ACQ_SEARCH_FREQ_HZ * 2 / ACQ_SEARCH_STEP_HZ + 1)
 
 /// 1 step is 0.5 of chip
 #define ACQ_PHASE1_HIST_STEP	(64)

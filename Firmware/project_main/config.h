@@ -119,6 +119,9 @@
 #define LED4_PIN                GPIO_Pin_12
 #define LED4_GPIO_PORT          GPIOD
 
+#define BUTTON1_PIN             GPIO_Pin_0
+#define BUTTON1_GPIO            GPIOA
+
 
 #endif //_CONFIG_H
 

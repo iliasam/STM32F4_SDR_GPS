@@ -9,8 +9,10 @@
 #include "print_state.h"
 #include "config.h"
 #include "acquisition.h"
+#include "keys_controlling.h"
 #include "math.h"
 #include "time.h"
+
 
 #if (ENABLE_RTCM_SEND)
   #include "obs_publish.h"
@@ -34,6 +36,8 @@ uint8_t gps_common_need_acq = 1;
 uint8_t gps_start_flag = 1;
 
 volatile static uint32_t diff;
+
+extern uint8_t key_up_presed;
 
 void gps_master_nav_handling(gps_ch_t* channels);
 void gps_master_transmit_obs(gps_ch_t* channels);
@@ -110,11 +114,20 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     }
   }
   
+  if (key_up_presed)
+  {
+    key_up_presed = 0;
+    gps_master_reset_to_aqc_start(channels);
+  }
+  
+  
   if (gps_common_need_acq)
   {
     print_state_update_acquisition(channels, signal_capture_get_packet_cnt());
     print_state_handling(signal_capture_get_packet_cnt());
   }
+  
+
   
   if (index == 0xFF) //dummy tracking
   {
@@ -312,4 +325,28 @@ void gps_master_test(gps_ch_t* channels)
   
   sendrtcmnav(&channels[cnt]);
 }
+
+//Reeset all channels to acquisition code search 
+void gps_master_reset_to_aqc_start(gps_ch_t* channels)
+{
+  for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
+  {
+    if (channels[i].acq_data.state < GPS_ACQ_FREQ_SEARCH_DONE)
+      return;
+  }
+  
+  for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
+  {
+    if (channels[i].nav_data.word_cnt_test > 1)
+    {
+      //copy good value
+      channels[i].acq_data.found_freq_offset_hz = 
+        (int16_t)channels[i].tracking_data.if_freq_offset_hz;
+    }
+    channels[i].acq_data.state = GPS_ACQ_FREQ_SEARCH_DONE;
+    memset(&channels[i].tracking_data, 0, sizeof(gps_tracking_t));
+    memset(&channels[i].nav_data, 0, sizeof(gps_nav_data_t)); 
+  }
+}
+
 

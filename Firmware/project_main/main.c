@@ -14,6 +14,7 @@
 #include "gps_master.h"
 #include "uart_comm.h"
 #include "print_state.h"
+#include "keys_controlling.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -54,6 +55,7 @@ int main(void)
   
   memset(&gps_channels[0], 0, sizeof(gps_channels));
   
+  /*
   // user can enter known doppler frequency to make acquisition much faster
   gps_channels[0].prn = 5;
   //gps_channels[0].acq_data.given_freq_offset_hz = 900;
@@ -70,8 +72,19 @@ int main(void)
   gps_channels[3].prn = 30;
   //gps_channels[3].acq_data.given_freq_offset_hz = 2000;
   gps_channell_prepare(&gps_channels[3]);
+  */
+  
+  gps_channels[0].prn = 10;
+  gps_channell_prepare(&gps_channels[0]);
+  gps_channels[1].prn = 23;
+  gps_channell_prepare(&gps_channels[1]);
+  gps_channels[2].prn = 26;
+  gps_channell_prepare(&gps_channels[2]);
+  gps_channels[3].prn = 16;
+  gps_channell_prepare(&gps_channels[3]);
   
   uart_init();
+  keys_init();
   signal_capture_init();
   
   signal_capture_need_data_copy();
@@ -95,6 +108,7 @@ int main(void)
         main_fast_data_proc();
       }
     }
+    key_handling();
   }//end of while(1)
   
 }//end of main()

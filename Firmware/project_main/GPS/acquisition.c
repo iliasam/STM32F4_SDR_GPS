@@ -99,7 +99,7 @@ void acquisition_start_code_search3_channel(gps_ch_t* channel)
     if (channel->acq_data.code_search_stop > (2 * PRN_LENGTH))
       channel->acq_data.code_search_stop = 2 * PRN_LENGTH;
     
-    //Histogram resollution is near 3 steps
+    //Histogram resolution is near 3 steps
     channel->acq_data.code_hist_step = (60 / ACQ_PHASE1_HIST_SIZE) + 1;
     acquisition_single_freq_check_reset();
     channel->acq_data.start_timestamp = signal_capture_get_packet_cnt();
@@ -367,7 +367,7 @@ void acquisition_process_single_freq_histogram(gps_ch_t* channel)
   
   if (channel->acq_data.state == GPS_ACQ_FREQ_SEARCH_DONE)
   {
-    printf("PRN=%d FINAL FREQ=%df\n", channel->prn, channel->acq_data.found_freq_offset_hz);
+    printf("PRN=%d FINAL FREQ=%dHz\n", channel->prn, channel->acq_data.found_freq_offset_hz);
   }
 }
 

@@ -8,7 +8,7 @@
 #include "gps_misc.h"
 #include "obs_publish.h"
 #include "nav_data_decode.h"
-#include "rtcm_common.h"
+#include "rtk_common.h"
 #include "uart_comm.h"
 #include <math.h>
 

@@ -58,6 +58,13 @@ typedef struct {        /* RTCM control struct type */
 void setbitu(unsigned char *buff, int pos, int len, unsigned int data);
 int encode_rtcm3(rtcm_t *rtcm, int type, int sync);
 
+
+double timediff(gtime_t t1, gtime_t t2);
+gtime_t gpst2time(int week, double sec);
+gtime_t timeadd(gtime_t t, double sec);
+char *code2obs(unsigned char code, int *freq);
+double time2gpst(gtime_t t, int *week);
+
 #endif
 
 

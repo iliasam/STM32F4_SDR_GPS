@@ -1,5 +1,9 @@
 //Part of this code is taken from here: https://github.com/ndhuan/GPSRTK
 
+//Finding receiver position by observations (time+pseudoranges) and 
+//navigation data (ephemeris)
+//Result is "gps_sol" and final_pos[] global variables
+
 #include "stdint.h"
 #include "string.h"
 #include "stdlib.h"
@@ -39,13 +43,16 @@
 #define sos4(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+x[3]*x[3])
 
 //******************************************************************
+//ephemeris
 nav_t nav_data = { 0 };
+/// GPS positon solution
 sol_t gps_sol = { {0} };
 double final_pos[3];//geodetic position {lat,lon,h} (deg,m)
 double azel[2 * MAXSAT];//satellites az/elevations, deg
 uint8_t flag_solving_busy = 0;
+uint8_t flag_processing_busy = 0;
 
-volatile static uint32_t diff;
+volatile static uint32_t diff_solve_ms;//debug
 
 double *mat(int n, int m);
 int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol);
@@ -95,6 +102,7 @@ int lsq(const double *A, const double *y, int n, int m, double *x, double *Q);
 //Initiaize pointers
 void gps_pos_solve_init(gps_ch_t* channels)
 {
+  //Copy pointers
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
     nav_data.eph[i] = &channels[i].eph_data.eph;
@@ -102,20 +110,30 @@ void gps_pos_solve_init(gps_ch_t* channels)
   nav_data.n = GPS_SAT_CNT;
 }
 
-void gps_pos_solve(gps_ch_t* channels, obsd_t *obs_p)
+// Main function, disigned to be iterative
+// User need to call it until solving_is_busy() return 0
+// Expected that any iteration takees less than 1ms
+void gps_pos_solve(obsd_t *obs_p)
 {
   uint32_t start_t = get_dwt_value();
-  if (pntpos_iterative(obs_p, GPS_SAT_CNT, &nav_data, &gps_sol) > 0)
+  if (flag_processing_busy)
   {
+    //Convert result to angular form
     ecef2pos(gps_sol.rr, final_pos);//radians
     final_pos[0] = final_pos[0] * R2D;
     final_pos[1] = final_pos[1] * R2D;
+    flag_processing_busy = 0;
+    //This iteration is short - 100us
+  }
+  else if (pntpos_iterative(obs_p, GPS_SAT_CNT, &nav_data, &gps_sol) > 0)
+  {
+    flag_processing_busy = 1;
   }
   uint32_t stop_t = get_dwt_value();
-  diff = stop_t - start_t;
-  diff = diff / 168;
-  printf("TIME: %d\n", diff);
-  if (diff > 900)
+  diff_solve_ms = stop_t - start_t;
+  diff_solve_ms = diff_solve_ms / 168;
+  printf("TIME: %d\n", diff_solve_ms);
+  if (diff_solve_ms > 900)
     printf("TIMEOUT\n");
 }
 
@@ -162,7 +180,7 @@ int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol)
 }
 
 //Same as pntpos(), but iterative
-//Reeturn 0 is not completed, 1 if OK, <0 if error
+//Return 0 if not completed, 1 if OK, <0 if error
 int pntpos_iterative(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol)
 {
   static double *rs, *dts, *var, *resp; //malloc pointers
@@ -248,7 +266,7 @@ int pntpos_iterative(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol)
 
 uint8_t solving_is_busy(void)
 {
-  return flag_solving_busy;
+  return (flag_solving_busy | flag_processing_busy);
 }
 
 /* new matrix ------------------------------------------------------------------
@@ -369,14 +387,9 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
   
   for (i = 0;i < MAXITR;i++) 
   {
-    uint32_t start_t = get_dwt_value();
     /* pseudorange residuals */
     nv = rescode(i, obs, n, rs, dts, vare, svh, nav, x, v, H, var, azel, vsat, resp,
                  &ns);
-    uint32_t stop_t = get_dwt_value();
-    diff = stop_t - start_t;
-    diff = diff / 168;
-    
     if (nv < NX) {
       //sprintf(msg, "lack of valid sats ns=%d", nv);
       break;
@@ -434,6 +447,8 @@ static int estpos(const obsd_t *obs, int n, const double *rs, const double *dts,
   return 0;
 }
 
+//Same as estpos(), but iterative
+//Return 0 if not completed, 1 if OK, <0 if error
 int estpos_iterative(const obsd_t *obs, int n, const double *rs, const double *dts,
   const double *vare, const int *svh, const nav_t *nav, 
   sol_t *sol, double *azel, int *vsat, double *resp)
@@ -448,6 +463,7 @@ int estpos_iterative(const obsd_t *obs, int n, const double *rs, const double *d
   
   if ((iteration_idx == 0) && (operation == 0))
   { 
+    //Init
     operation = 0;
     v = mat(n + 4, 1); 
     H = mat(NX, n + 4); 
@@ -460,6 +476,11 @@ int estpos_iterative(const obsd_t *obs, int n, const double *rs, const double *d
   
   while (1)
   {
+    //rescode() take near 1.5ms if ionocorr() and tropcorr() are used
+    //So iterative mode is needed.
+    //rescode() can be used here without ionocorr() and tropcorr() enabled
+    //So only two operations (rescode() and lsq()) will be needed
+    
     if (operation < (n - 1))//n-1=3
     {
       int res2;

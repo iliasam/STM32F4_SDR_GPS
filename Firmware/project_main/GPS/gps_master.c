@@ -13,8 +13,12 @@
 #include "acquisition.h"
 #include "keys_controlling.h"
 #include "math.h"
-#include "solving.h"
 #include "time.h"
+
+#if (ENABLE_CALC_POSITION)
+  #include "solving.h"
+#endif
+
 
 
 #if (ENABLE_RTCM_SEND)
@@ -140,7 +144,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
 }
 
 
-
+//Called every 17ms, when the is no tracking working
 void gps_master_nav_handling(gps_ch_t* channels)
 {
   //Set first subframe detection time for all channels
@@ -256,8 +260,6 @@ void gps_master_nav_handling(gps_ch_t* channels)
       ((float)time_diff_ms / PRN_SPEED_HZ);
   }
   
-  
-  
   #if (ENABLE_RTCM_SEND)
     gps_master_transmit_obs(channels);
   #endif
@@ -268,15 +270,15 @@ void gps_master_nav_handling(gps_ch_t* channels)
 }
 
 #if (ENABLE_CALC_POSITION)
-//Calculate receiver positon handling
+//Calculate receiver positon - handling
 void gps_master_calculate_pos(gps_ch_t* channels)
 {
   static uint32_t prev_calc_time_ms = 0;
   
   if (solving_is_busy())
   {
-    //Processing already runned solving
-    gps_pos_solve(channels, obsd);
+    //Processing already runing solving
+    gps_pos_solve(obsd);
     return;
   }
   
@@ -297,7 +299,7 @@ void gps_master_calculate_pos(gps_ch_t* channels)
     if (eph_ok_cnt == GPS_SAT_CNT)
     {
       printf("New pos search\n");
-      gps_pos_solve(channels, obsd);
+      gps_pos_solve(obsd);
     }
   }
 }

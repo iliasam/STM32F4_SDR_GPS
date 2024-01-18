@@ -15,7 +15,6 @@
 #include "uart_comm.h"
 #include "print_state.h"
 #include "keys_controlling.h"
-#include "solving.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -23,6 +22,10 @@
 
 #if (ENABLE_RTCM_SEND)
   #include "obs_publish.h"
+#endif
+
+#if (ENABLE_CALC_POSITION)
+  #include "solving.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
@@ -80,8 +83,9 @@ int main(void)
   gps_channels[3].prn = 16;
   gps_channell_prepare(&gps_channels[3]);
   */
-  
+#if (ENABLE_CALC_POSITION)
   gps_pos_solve_init(gps_channels);
+#endif
   
   uart_init();
   keys_init();

@@ -90,14 +90,9 @@ typedef struct {        /* RTCM control struct type */
 } rtcm_t;
 
 typedef struct {        /* navigation data type */
-  int n, nmax;         /* number of broadcast ephemeris */
-  eph_t *eph[MAXSAT];  /* GPS/QZS/GAL ephemeris */
-  //erp_t  erp;         /* earth rotation parameters */
-  double utc_gps[4];  /* GPS delta-UTC parameters {A0,A1,T,W} */
-  double ion_gps[8];  /* GPS iono model parameters {a0,a1,a2,a3,b0,b1,b2,b3} */
-  int leaps;          /* leap seconds (s) */
-  double cbias[MAXSAT][3];   /* code bias (0:p1-p2,1:p1-c1,2:p2-c2) (m) */
-  double wlbias[MAXSAT];     /* wide-lane bias (cycle) */
+  int n;                /* number of broadcast ephemeris */
+  eph_t *eph[MAXSAT];   /* GPS ephemeris */
+  double ion_gps[8];    /* GPS iono model parameters {a0,a1,a2,a3,b0,b1,b2,b3} */
 } nav_t;
 
 void setbitu(unsigned char *buff, int pos, int len, unsigned int data);
@@ -110,8 +105,6 @@ gtime_t timeadd(gtime_t t, double sec);
 char *code2obs(unsigned char code, int *freq);
 double time2gpst(gtime_t t, int *week);
 void sdrobs2obsd(gps_ch_t* channels, int ns, obsd_t *out);
-
-void sdrobs_test(gps_ch_t* channels, int ns, obsd_t *out);
 #endif
 
 

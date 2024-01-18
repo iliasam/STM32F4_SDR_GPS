@@ -1,6 +1,8 @@
 #include "rtk_common.h"
 #include "math.h"
 
+#define UNIX2GPS        315964800
+
 static char *obscodes2[] = {       /* observation code strings */
   
   ""  ,"1C","1P","1W","1Y", "1M","1N","1S","1L","1E", /*  0- 9 */
@@ -28,7 +30,7 @@ double timediff(gtime_t t1, gtime_t t2)
 gtime_t gpst2time(int week, double sec)
 {
   gtime_t t;
-  t.time = 315964800;//Ticks between Unix epoch and GPS epoch
+  t.time = UNIX2GPS;//Ticks between Unix epoch and GPS epoch
   t.sec = 0;
   
   if (sec < -1E9 || 1E9 < sec)
@@ -58,7 +60,7 @@ char *code2obs(unsigned char code, int *freq)
 double time2gpst(gtime_t t, int *week)
 {
   gtime_t t0;
-  t0.time = 315964800;//Ticks between Unix epoch and GPS epoch
+  t0.time = UNIX2GPS;//Ticks between Unix epoch and GPS epoch
   t0.sec = 0;
   
   time_t sec = t.time - t0.time;
@@ -85,31 +87,4 @@ void sdrobs2obsd(gps_ch_t* channels, int ns, obsd_t *out)
     // signal type 
     out[i].code[0] = CODE_L1C;
   }
-}
-
-void sdrobs_test(gps_ch_t* channels, int ns, obsd_t *out)
-{
-  gtime_t common_t;
-  common_t.time = 1699874857;
-  common_t.sec = 0.46880199999999661;
-  int i;
-  for (i = 0; i < ns;i++)
-  {
-    out[i].time = common_t;
-    out[i].rcv = 1;
-    out[i].sat = channels[i].prn;
-    out[i].P[0] = channels[i].obs_data.pseudorange_m;
-    out[i].L[0] = 0;
-    out[i].D[0] = (float)channels[i].tracking_data.if_freq_offset_hz;
-    out[i].SNR[0] = (unsigned char)(channels[i].tracking_data.snr_value + 20.0f) * 4;
-    out[i].LLI[0] = 0;
-    
-    // signal type 
-    out[i].code[0] = CODE_L1C;
-  }
-  
-  out[0].P[0] = 22018479.724;
-  out[1].P[0] = 22765718.010;
-  out[2].P[0] = 22178922.862;
-  out[3].P[0] = 20650223.125;
 }

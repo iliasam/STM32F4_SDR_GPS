@@ -8,7 +8,8 @@
 
 #define GPS_NAV_WORD_LENGTH	        30 //Length in bits
 #define GPS_NAV_SUBFRAME_LENGTH_BYTES	38 //(300/8=38byte)
-
+//Offset between GPS and UTC time
+#define GPS_UTC_TIME_OFFSET_S           18
 
 #define M_PI 3.1415926535f
 

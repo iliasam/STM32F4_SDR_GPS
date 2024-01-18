@@ -68,10 +68,17 @@ void SPI_DMA_IRQ_HANDLER(void)
     spi_curr_ready_rx_buf = &spi_rx_buffer[PRN_SPI_WORDS_CNT];
   }
   
-  LED4_GPIO_PORT->ODR ^= LED4_PIN;//debug
+  
   signal_capture_packet_cnt++;
   signal_capture_irq_timestamp = get_dwt_value();
   signal_capture_irq_unprocessed_flag = 1;
+  
+  //LED4_GPIO_PORT->ODR ^= LED4_PIN;//debug
+  uint32_t tmp_val = (signal_capture_packet_cnt & 256);
+  if (tmp_val < 128)
+    LED4_GPIO_PORT->ODR |= LED4_PIN;
+  else
+    LED4_GPIO_PORT->ODR &= ~LED4_PIN;
 }
 
 void signal_capture_init(void)

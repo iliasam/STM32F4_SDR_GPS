@@ -319,6 +319,7 @@
           <state>$PROJ_DIR$\..\..\Libraries\STM32F4xx_StdPeriph_Driver\inc</state>
           <state>$PROJ_DIR$\..\..\Libraries\CMSIS</state>
           <state>$PROJ_DIR$\..\GPS</state>
+          <state>$PROJ_DIR$\..\GPS\RTK</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -969,6 +970,18 @@
   </group>
   <group>
     <name>GPS</name>
+    <group>
+      <name>RTK</name>
+      <file>
+        <name>$PROJ_DIR$\..\GPS\RTK\rtcm3e.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\GPS\RTK\rtklib_common.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\GPS\RTK\solving.c</name>
+      </file>
+    </group>
     <file>
       <name>$PROJ_DIR$\..\GPS\acquisition.c</name>
     </file>
@@ -989,9 +1002,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\GPS\obs_publish.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\GPS\rtcm3e.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\GPS\tracking.c</name>

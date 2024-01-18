@@ -1,12 +1,17 @@
+//Decoding Ephemeris data from satellites
+//Notice that data from subframes is stored in common data structure immediately
+//without buffering, which is not OK
+//This code is partially taken from https://github.com/taroz/GNSS-SDRLIB
+
 #include "stdint.h"
 #include "string.h"
 #include "stdlib.h"
 #include "stdio.h"
 #include "gps_misc.h"
 #include "nav_data_decode.h"
+#include "rtk_common.h"
 #include "config.h"
 #include <math.h>
-
 
 
 void decode_subfrm1(const uint8_t *buff, sdreph_t *eph);
@@ -22,8 +27,6 @@ int32_t getbits2(const uint8_t *buff, int p1, int l1, int p2, int l2);
 
 int adjgpsweek(int week);
 
-gtime_t gpst2time(int week, double sec);
-
 //******************************************************************
 
 
@@ -34,6 +37,7 @@ uint8_t gps_nav_data_decode_subframe(gps_ch_t* channel)
 {
   uint32_t id = getbitu(channel->nav_data.subframe_data, 49, 3); /* subframe ID */
   
+  channel->eph_data.eph.sat = channel->prn;
   switch (id) 
   {
   case 1: decode_subfrm1(channel->nav_data.subframe_data, &channel->eph_data); break;
@@ -75,12 +79,13 @@ void decode_subfrm1(const uint8_t *buff, sdreph_t *eph)
   /* subframe decode counter */
   eph->cnt++;
   eph->received_mask |= 1;
+  eph->received_mask_proc |= 1;
 }
 
 void decode_subfrm2(const uint8_t *buff, sdreph_t *eph)
 {
   double sqrtA;
-  int oldiode = eph->eph.iode;
+  //int oldiode = eph->eph.iode;
   
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0;
   eph->eph.iode = getbitu(buff, 60, 8);
@@ -94,15 +99,17 @@ void decode_subfrm2(const uint8_t *buff, sdreph_t *eph)
   eph->eph.toes = getbitu(buff, 270, 16)*16.0;
   eph->eph.fit = getbitu(buff, 286, 1);
   eph->eph.A = sqrtA * sqrtA;
+  eph->eph.toe = gpst2time(eph->eph.week, eph->eph.toes);
   
   /* subframe counter */
   eph->cnt++;
   eph->received_mask |= 2;
+  eph->received_mask_proc |= 2;
 }
 
 void decode_subfrm3(const uint8_t *buff, sdreph_t *eph)
 {
-  int oldiode = eph->eph.iode;
+  //int oldiode = eph->eph.iode;
   
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0;
   eph->eph.cic = getbits(buff, 60, 16)*P2_29;
@@ -118,6 +125,7 @@ void decode_subfrm3(const uint8_t *buff, sdreph_t *eph)
   /* subframe counter */
   eph->cnt++;
   eph->received_mask |= 4;
+  eph->received_mask_proc |= 4;
 }
 
 void decode_subfrm4(const uint8_t *buff, sdreph_t *eph)
@@ -125,12 +133,14 @@ void decode_subfrm4(const uint8_t *buff, sdreph_t *eph)
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0; /* transmission time of subframe */
   eph->cnt++;
   eph->received_mask |= 8;
+  eph->received_mask_proc |= 8;
 }
 
 void decode_subfrm5(const uint8_t *buff, sdreph_t *eph)
 {
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0; /* transmission time of subframe */
   eph->received_mask |= 16;
+  eph->received_mask_proc |= 16;
 }
 
 //**********************************************************
@@ -179,18 +189,3 @@ int adjgpsweek(int week)
   const int fixed_build_gps_week = 2290;//NOV 2023
   return week + (fixed_build_gps_week - week + 512) / 1024 * 1024;
 }
-
-//From rtkcm.c
-gtime_t gpst2time(int week, double sec)
-{
-  gtime_t t;
-  t.time = 315964800;//Ticks between Unix epoch and GPS epoch
-  t.sec = 0;
-  
-  if (sec < -1E9 || 1E9 < sec) 
-    sec = 0.0;
-  t.time += 86400 * 7 * week + (int)sec;
-  t.sec = sec - (int)sec;
-  return t;
-}
-

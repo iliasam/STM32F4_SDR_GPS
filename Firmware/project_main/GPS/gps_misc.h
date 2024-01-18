@@ -8,7 +8,8 @@
 
 #define GPS_NAV_WORD_LENGTH	        30 //Length in bits
 #define GPS_NAV_SUBFRAME_LENGTH_BYTES	38 //(300/8=38byte)
-
+//Offset between GPS and UTC time
+#define GPS_UTC_TIME_OFFSET_S           18
 
 #define M_PI 3.1415926535f
 
@@ -119,8 +120,8 @@ typedef struct
   
   uint32_t      last_subframe_time;//Time of the subframe start in PRN/ms, updated with 6s period, based on accur time.
   uint32_t      first_subframe_time;//Time of the subframe start in PRN/ms, updated once, for detecting ref. sat.
-  uint16_t      subframe_cnt;
-  uint8_t       new_subframe_flag;//reset by master processing
+  uint16_t      subframe_cnt;//Subframe counter
+  uint8_t       new_subframe_flag;//Reset by master processing
   
   uint8_t       subframe_data[GPS_NAV_SUBFRAME_LENGTH_BYTES];//Every bit here is one nav. data bit
 } gps_nav_data_t;
@@ -168,10 +169,8 @@ typedef struct {
   
   uint16_t sub_cnt;
   
-  uint8_t received_mask;
-  time_t timestamp_subfrm1; /* Timestamp is s, used for periodic sending eph. to another App  */
-  time_t timestamp_subfrm2; 
-  time_t timestamp_subfrm3;
+  uint8_t received_mask;//for sending RTCM, cleared after send
+  uint8_t received_mask_proc;//for processing, not cleared
 } sdreph_t;
 
 typedef struct

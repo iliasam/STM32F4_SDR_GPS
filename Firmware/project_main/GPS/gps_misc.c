@@ -168,7 +168,7 @@ uint16_t correlation_search(
 }
 
 
-//Rewind phase is if we do "steps" of "gps_shift_to_zero_freq_track"
+//Rewind phase as if we do "steps" of "gps_shift_to_zero_freq_track"
 void gps_rewind_if_phase(gps_tracking_t* trk_channel, uint8_t steps)
 {
   uint32_t acc_step = (uint32_t)(((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));

@@ -7,6 +7,9 @@
 #include "stdio.h"
 #include "string.h"
 #include <stdarg.h>
+#if (ENABLE_CALC_POSITION)
+  #include "solving.h"
+#endif
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -28,6 +31,11 @@ char print_state_tx_buf[PRINT_STATE_BUF_LENGTH];
 
 char *print_state_wr_p = print_state_tmp_buf;
 uint16_t print_state_cnt = 0;
+
+#if (ENABLE_CALC_POSITION)
+  extern sol_t gps_sol;
+  extern double final_pos[3];
+#endif
 
 /* Private function prototypes -----------------------------------------------*/
 void print_state_channel(gps_ch_t* channel, uint8_t ch_idx);
@@ -150,8 +158,20 @@ void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
   {
     gotoxy(1,7);
     clr_line();
-    cur_time = cur_time - 18;//PS time offset
-    debug_print("UTC TIME: %s", ctime(&cur_time));
+    cur_time = cur_time - GPS_UTC_TIME_OFFSET_S;
+    debug_print("EPH UTC TIME: %s", ctime(&cur_time));
+  }
+  
+  if (gps_sol.stat != SOLQ_NONE)
+  {
+    gotoxy(1,8);
+    clr_line();
+    cur_time = gps_sol.time.time - GPS_UTC_TIME_OFFSET_S;
+    debug_print("SOLUTION UTC TIME: %s", ctime(&cur_time));
+    
+    gotoxy(1,9);
+    clr_line();
+    debug_print("POSITION: %2.5f %2.5f", final_pos[0], final_pos[1]);
   }
 }
 

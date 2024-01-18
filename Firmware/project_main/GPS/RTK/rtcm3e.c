@@ -20,7 +20,7 @@
 *                           delete MT 1046 according to ref [15]
 *           2014/05/15 1.8  set NT field in MT 1020 glonass ephemeris
 *-----------------------------------------------------------------------------*/
-#include "rtcm_common.h"
+#include "rtk_common.h"
 #include "obs_publish.h"
 #include "nav_data_decode.h"
 #include "math.h"
@@ -58,14 +58,6 @@ const char *obscodes[] = {       /* observation code strings */
 	"2I","2Q","6I","6Q","3I", "3Q","3X","1I","1Q",""    /* 40-49 */
 };
 
-const unsigned char obsfreqs[] = { /* 1:L1,2:L2,3:L5,4:L6,5:L7,6:L8,7:L3 */
-
-	0, 1, 1, 1, 1,  1, 1, 1, 1, 1, /*  0- 9 */
-	1, 1, 1, 1, 2,  2, 2, 2, 2, 2, /* 10-19 */
-	2, 2, 2, 2, 3,  3, 3, 5, 5, 5, /* 20-29 */
-	4, 4, 4, 4, 4,  4, 4, 6, 6, 6, /* 30-39 */
-	2, 2, 4, 4, 3,  3, 3, 1, 1, 0  /* 40-49 */
-};
 
 const char *msm_sig_gps[32] = {
 	/* GPS: ref [13] table 3.5-87, ref [14][15] table 3.5-91 */
@@ -93,18 +85,6 @@ void setbits(unsigned char *buff, int pos, int len, int data)
 	setbitu(buff, pos, len, (unsigned int)data);
 }
 
-double time2gpst(gtime_t t, int *week)
-{
-	gtime_t t0;
-	t0.time = 315964800;//Ticks between Unix epoch and GPS epoch
-	t0.sec = 0;
-
-	time_t sec = t.time - t0.time;
-	int w = (int)(sec / (86400 * 7));
-
-	if (week) *week = w;
-	return (double)(sec - w * 86400 * 7) + t.sec;
-}
 
 int satsys(int sat, int *prn)
 {
@@ -125,24 +105,7 @@ int satsys(int sat, int *prn)
 //	return CLIGHT / FREQ1;
 //}
 
-char *code2obs(unsigned char code, int *freq)
-{
-	if (freq) *freq = 0;
-	if (code <= CODE_NONE || MAXCODE < code) return "";
-	if (freq) *freq = obsfreqs[code];
-	return (char *)obscodes[code];
-}
-
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-
-
-double timediff(gtime_t t1, gtime_t t2)
-{
-	return difftime(t1.time, t2.time) + t1.sec - t2.sec;
-}
 
 /* lock time -----------------------------------------------------------------*/
 static int locktime(gtime_t time, gtime_t *lltime, unsigned char LLI)

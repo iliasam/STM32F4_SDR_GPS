@@ -79,6 +79,7 @@ void decode_subfrm1(const uint8_t *buff, sdreph_t *eph)
   /* subframe decode counter */
   eph->cnt++;
   eph->received_mask |= 1;
+  eph->received_mask_proc |= 1;
 }
 
 void decode_subfrm2(const uint8_t *buff, sdreph_t *eph)
@@ -103,6 +104,7 @@ void decode_subfrm2(const uint8_t *buff, sdreph_t *eph)
   /* subframe counter */
   eph->cnt++;
   eph->received_mask |= 2;
+  eph->received_mask_proc |= 2;
 }
 
 void decode_subfrm3(const uint8_t *buff, sdreph_t *eph)
@@ -123,6 +125,7 @@ void decode_subfrm3(const uint8_t *buff, sdreph_t *eph)
   /* subframe counter */
   eph->cnt++;
   eph->received_mask |= 4;
+  eph->received_mask_proc |= 4;
 }
 
 void decode_subfrm4(const uint8_t *buff, sdreph_t *eph)
@@ -130,12 +133,14 @@ void decode_subfrm4(const uint8_t *buff, sdreph_t *eph)
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0; /* transmission time of subframe */
   eph->cnt++;
   eph->received_mask |= 8;
+  eph->received_mask_proc |= 8;
 }
 
 void decode_subfrm5(const uint8_t *buff, sdreph_t *eph)
 {
   eph->tow_gpst = getbitu(buff, 30, 17)*6.0; /* transmission time of subframe */
   eph->received_mask |= 16;
+  eph->received_mask_proc |= 16;
 }
 
 //**********************************************************

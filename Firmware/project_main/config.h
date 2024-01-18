@@ -27,7 +27,10 @@
 #define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 16bit words
 #define PRN_LENGTH              1023 //in chips
 
-#define ENABLE_RTCM_SEND        1
+#define ENABLE_RTCM_SEND        0
+
+//Calculate receiver position by observations
+#define ENABLE_CALC_POSITION    1
 
 
 

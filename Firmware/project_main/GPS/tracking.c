@@ -16,8 +16,7 @@
 #define GPS_PRE_TRACK_ZONE      (30)
 #define GPS_PRE_TRACK_STEP      (GPS_PRE_TRACK_ZONE / TRACKING_CH_LENGTH)
 
-//One byte is 8bit, one byte is 0.5 of chip
-#define GPS_FINE_RATIO_F        (8.0f)
+//1 chip is 16 bit, 0.5 chis is 8bit = 1 byte
 #define GPS_FINE_RATIO	        8
 
 // Number of tracking cycles to calculate SNR

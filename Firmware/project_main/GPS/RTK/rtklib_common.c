@@ -67,3 +67,49 @@ double time2gpst(gtime_t t, int *week)
   if (week) *week = w;
   return (double)(sec - w * 86400 * 7) + t.sec;
 }
+
+void sdrobs2obsd(gps_ch_t* channels, int ns, obsd_t *out)
+{
+  int i;
+  for (i = 0; i < ns;i++)
+  {
+    out[i].time = gpst2time(channels[i].eph_data.week_gpst, channels[i].obs_data.tow_s);
+    out[i].rcv = 1;
+    out[i].sat = channels[i].prn;
+    out[i].P[0] = channels[i].obs_data.pseudorange_m;
+    out[i].L[0] = 0;
+    out[i].D[0] = (float)channels[i].tracking_data.if_freq_offset_hz;
+    out[i].SNR[0] = (unsigned char)(channels[i].tracking_data.snr_value + 20.0f) * 4;
+    out[i].LLI[0] = 0;
+    
+    // signal type 
+    out[i].code[0] = CODE_L1C;
+  }
+}
+
+void sdrobs_test(gps_ch_t* channels, int ns, obsd_t *out)
+{
+  gtime_t common_t;
+  common_t.time = 1699874857;
+  common_t.sec = 0.46880199999999661;
+  int i;
+  for (i = 0; i < ns;i++)
+  {
+    out[i].time = common_t;
+    out[i].rcv = 1;
+    out[i].sat = channels[i].prn;
+    out[i].P[0] = channels[i].obs_data.pseudorange_m;
+    out[i].L[0] = 0;
+    out[i].D[0] = (float)channels[i].tracking_data.if_freq_offset_hz;
+    out[i].SNR[0] = (unsigned char)(channels[i].tracking_data.snr_value + 20.0f) * 4;
+    out[i].LLI[0] = 0;
+    
+    // signal type 
+    out[i].code[0] = CODE_L1C;
+  }
+  
+  out[0].P[0] = 22018479.724;
+  out[1].P[0] = 22765718.010;
+  out[2].P[0] = 22178922.862;
+  out[3].P[0] = 20650223.125;
+}

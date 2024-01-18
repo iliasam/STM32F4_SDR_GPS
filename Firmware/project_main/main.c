@@ -15,6 +15,7 @@
 #include "uart_comm.h"
 #include "print_state.h"
 #include "keys_controlling.h"
+#include "solving.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -28,11 +29,6 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
-
-volatile int16_t test_res = 0;
-volatile static uint32_t diff_main = 0;
-
 gps_ch_t gps_channels[GPS_SAT_CNT];
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,25 +51,26 @@ int main(void)
   
   memset(&gps_channels[0], 0, sizeof(gps_channels));
   
-  /*
+  //solve_test();
+  
   // user can enter known doppler frequency to make acquisition much faster
   gps_channels[0].prn = 5;
-  //gps_channels[0].acq_data.given_freq_offset_hz = 900;
+  gps_channels[0].acq_data.given_freq_offset_hz = 900;
   gps_channell_prepare(&gps_channels[0]);
   
   gps_channels[1].prn = 14;
-  //gps_channels[1].acq_data.given_freq_offset_hz = 4000;
+  gps_channels[1].acq_data.given_freq_offset_hz = 4000;
   gps_channell_prepare(&gps_channels[1]);
   
   gps_channels[2].prn = 20;
-  //gps_channels[2].acq_data.given_freq_offset_hz = -1000;
+  gps_channels[2].acq_data.given_freq_offset_hz = -1000;
   gps_channell_prepare(&gps_channels[2]);
   
   gps_channels[3].prn = 30;
-  //gps_channels[3].acq_data.given_freq_offset_hz = 2000;
+  gps_channels[3].acq_data.given_freq_offset_hz = 2000;
   gps_channell_prepare(&gps_channels[3]);
-  */
   
+  /*
   gps_channels[0].prn = 10;
   gps_channell_prepare(&gps_channels[0]);
   gps_channels[1].prn = 23;
@@ -82,6 +79,9 @@ int main(void)
   gps_channell_prepare(&gps_channels[2]);
   gps_channels[3].prn = 16;
   gps_channell_prepare(&gps_channels[3]);
+  */
+  
+  gps_pos_solve_init(gps_channels);
   
   uart_init();
   keys_init();
@@ -89,7 +89,6 @@ int main(void)
   
   signal_capture_need_data_copy();
   print_state_prepare(gps_channels);
-  
 
   while(1)
   {

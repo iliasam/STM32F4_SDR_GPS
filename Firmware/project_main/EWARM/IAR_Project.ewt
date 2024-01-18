@@ -1064,6 +1064,9 @@
       <file>
         <name>$PROJ_DIR$\..\GPS\RTK\rtklib_common.c</name>
       </file>
+      <file>
+        <name>$PROJ_DIR$\..\GPS\RTK\solving.c</name>
+      </file>
     </group>
     <file>
       <name>$PROJ_DIR$\..\GPS\acquisition.c</name>

@@ -1,8 +1,10 @@
+//GPS master is a code that controllig acquisition in all channels, start tracking
+//and controllling sending RTCM and position calculation
+
 #include "stdint.h"
 #include "string.h"
 #include "stdlib.h"
 #include "stdio.h"
-//#include "delay_us_timer.h"
 #include "signal_capture.h"
 #include "uart_comm.h"
 #include "gps_master.h"
@@ -11,6 +13,7 @@
 #include "acquisition.h"
 #include "keys_controlling.h"
 #include "math.h"
+#include "solving.h"
 #include "time.h"
 
 
@@ -24,30 +27,30 @@
 #define CLIGHT_NORM	        (299792458.0 / PRN_SPEED_HZ)
 #define SUBFRAME_LENGTH_MS	(6000)
 
+#define GPS_RTCM_SEND_PERIOD_MS 200
+#define GPS_CALC_POS_PERIOD_MS   500
 
-#if (ENABLE_RTCM_SEND)
-  obsd_t obsd[GPS_SAT_CNT];
-#endif
 
 //******************************************************************
+obsd_t obsd[GPS_SAT_CNT];
+
 //Flag that at least one sat. need acquisition
 uint8_t gps_common_need_acq = 1;
 
 uint8_t gps_start_flag = 1;
 
-volatile static uint32_t diff;
-
 extern uint8_t key_up_presed;
 
 void gps_master_nav_handling(gps_ch_t* channels);
 void gps_master_transmit_obs(gps_ch_t* channels);
+void gps_master_calculate_pos(gps_ch_t* channels);
 
 //****************************************************
 //****************************************************
 
 void gps_master_handling(gps_ch_t* channels, uint8_t index)
 {
-  gps_ch_t* curr_ch = channels;
+  //gps_ch_t* curr_ch = channels;
   
   if (gps_start_flag)
   {
@@ -56,21 +59,20 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
   }
   
   gps_common_need_acq = 0;
-  uint8_t need_f_search = 0;
+  uint8_t need_f_search = 0;//freq. search
   uint8_t code_search3_cnt = 0;
+  
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
-    if (curr_ch->acq_data.state != GPS_ACQ_DONE)
+    if (channels[i].acq_data.state != GPS_ACQ_DONE)
       gps_common_need_acq = 1;
-    if (curr_ch->acq_data.state < GPS_ACQ_FREQ_SEARCH_DONE)
+    if (channels[i].acq_data.state < GPS_ACQ_FREQ_SEARCH_DONE)
       need_f_search = 1;
-    if (curr_ch->acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH2_DONE)
+    if (channels[i].acq_data.state == GPS_ACQ_CODE_PHASE_SEARCH2_DONE)
       code_search3_cnt++;
-    curr_ch++;
   }
   
   //Starting code search - one by one
-  curr_ch = channels;
   if (gps_common_need_acq == 1)
   {
     for (uint8_t i = 0; i < (GPS_SAT_CNT - 1); i++)
@@ -86,7 +88,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     }
   }
   
-  //Start acq. code search for all possible
+  //Start acq. code search for all channels
   if ((need_f_search == 0) && (gps_common_need_acq == 1))
   {
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
@@ -102,15 +104,13 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     }
   }
   
-  curr_ch = channels;
   if (gps_common_need_acq == 0)
   {
     //acq is done at all sats. -> start tracking!
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
     {
-      if (curr_ch->tracking_data.state == GPS_TRACKNG_IDLE)
-        curr_ch->tracking_data.state = GPS_NEED_PRE_TRACK; //start tracking for this sat.
-      curr_ch++;
+      if (channels[i].tracking_data.state == GPS_TRACKNG_IDLE)
+        channels[i].tracking_data.state = GPS_NEED_PRE_TRACK; //start tracking for this sat.
     }
   }
   
@@ -126,8 +126,6 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
     print_state_update_acquisition(channels, signal_capture_get_packet_cnt());
     print_state_handling(signal_capture_get_packet_cnt());
   }
-  
-
   
   if (index == 0xFF) //dummy tracking
   {
@@ -167,14 +165,12 @@ void gps_master_nav_handling(gps_ch_t* channels)
     if (channels[i].nav_data.last_subframe_time < min_subframe_time)
     {
       min_subframe_time = channels[i].nav_data.last_subframe_time;
-      ref_idx = i;
+      ref_idx = i;//Reference sat. is sat. with min. time - closest to receiver
     }
     
     if (channels[i].nav_data.last_subframe_time > max_subframe_time)
-    {
       max_subframe_time = channels[i].nav_data.last_subframe_time;
-    }
-    
+
     if (channels[i].nav_data.subframe_cnt < min_subframe_cnt)
       min_subframe_cnt = channels[i].nav_data.subframe_cnt;
     
@@ -189,12 +185,15 @@ void gps_master_nav_handling(gps_ch_t* channels)
   if (diff_ms > 100)//wait untill all subframes of this epoch get received (they will have similiar times)
     return;
   
-  if ((has_subframe_time_cnt == GPS_SAT_CNT) && (first_time_not_set_cnt == GPS_SAT_CNT))
+  if ((has_subframe_time_cnt == GPS_SAT_CNT) && 
+      (first_time_not_set_cnt == GPS_SAT_CNT))
   {
     //This works once!
+    //Lock "first_subframe_time"
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
     {
-      channels[i].nav_data.first_subframe_time = channels[i].nav_data.last_subframe_time;
+      channels[i].nav_data.first_subframe_time = 
+        channels[i].nav_data.last_subframe_time;
       channels[i].nav_data.subframe_cnt = 0;
     }
   }
@@ -205,18 +204,22 @@ void gps_master_nav_handling(gps_ch_t* channels)
   if (channels[0].nav_data.first_subframe_time == 0)
     return;
   
-  uint32_t ref_time_ms = channels[ref_idx].nav_data.first_subframe_time + max_subframe_cnt * SUBFRAME_LENGTH_MS;
+  uint32_t ref_time_ms = channels[ref_idx].nav_data.first_subframe_time + 
+    max_subframe_cnt * SUBFRAME_LENGTH_MS;
   
   //Detecting code phase swap - may happen more longer after new subframe event
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
-    if (channels[i].tracking_data.code_phase_swap_flag && channels[i].nav_data.new_subframe_flag)
+    if (channels[i].tracking_data.code_phase_swap_flag && 
+        channels[i].nav_data.new_subframe_flag)
     {
       channels[i].nav_data.new_subframe_flag = 0;
       channels[i].tracking_data.code_phase_swap_flag = 0;
     }
     
-    float diff_f = fabs(channels[i].tracking_data.old_code_phase_fine - channels[i].tracking_data.code_phase_fine);
+    float diff_f = fabs(channels[i].tracking_data.old_code_phase_fine - 
+                        channels[i].tracking_data.code_phase_fine);
+    
     if (diff_f > ((float)PRN_LENGTH * 16.0f / 2.0f))//half of range
     {
       //code phase swap detected
@@ -226,7 +229,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
     channels[i].tracking_data.old_code_phase_fine = channels[i].tracking_data.code_phase_fine;
   }
   
-  uint32_t curr_tick_time = signal_capture_get_packet_cnt();
+  uint32_t curr_tick_time = signal_capture_get_packet_cnt();//system time
   //Time from last subframe of REF sat.
   int32_t time_diff_ms = (int32_t)curr_tick_time - (int32_t)channels[ref_idx].nav_data.last_subframe_time;
   if ((time_diff_ms < 0))
@@ -234,8 +237,10 @@ void gps_master_nav_handling(gps_ch_t* channels)
   
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
-    int32_t diff_prn = channels[i].nav_data.last_subframe_time - ref_time_ms;
-    double diff_time_ms = (double)diff_prn + channels[i].tracking_data.code_phase_fine / ((double)PRN_LENGTH * 16.0f);
+    int32_t diff_prn_ms = channels[i].nav_data.last_subframe_time - ref_time_ms;
+    double diff_time_ms = (double)diff_prn_ms + 
+      channels[i].tracking_data.code_phase_fine / ((double)PRN_LENGTH * 16.0f);
+    
     //Comepensating state when code phase swapped, but new subframe has not come yet
     if (channels[i].tracking_data.code_phase_swap_flag == 1)
     {
@@ -247,13 +252,58 @@ void gps_master_nav_handling(gps_ch_t* channels)
     }
     double pseudo_range_m = (GPS_OFFSET_TIME_MS + diff_time_ms) * CLIGHT_NORM;
     channels[i].obs_data.pseudorange_m = pseudo_range_m;
-    channels[i].obs_data.tow_s = channels[ref_idx].eph_data.tow_gpst + ((float)time_diff_ms / PRN_SPEED_HZ);
+    channels[i].obs_data.tow_s = channels[ref_idx].eph_data.tow_gpst + 
+      ((float)time_diff_ms / PRN_SPEED_HZ);
   }
+  
+  
   
   #if (ENABLE_RTCM_SEND)
     gps_master_transmit_obs(channels);
   #endif
+  
+  #if (ENABLE_CALC_POSITION)
+  gps_master_calculate_pos(channels);
+  #endif
 }
+
+#if (ENABLE_CALC_POSITION)
+//Calculate receiver positon handling
+void gps_master_calculate_pos(gps_ch_t* channels)
+{
+  static uint32_t prev_calc_time_ms = 0;
+  
+  if (solving_is_busy())
+  {
+    //Processing already runned solving
+    gps_pos_solve(channels, obsd);
+    return;
+  }
+  
+  uint32_t curr_time_ms = signal_capture_get_packet_cnt();
+  if ((curr_time_ms - prev_calc_time_ms) > GPS_CALC_POS_PERIOD_MS)
+  {
+    prev_calc_time_ms = curr_time_ms;
+    
+    //Check that all sats have received ephemeris
+    uint8_t  eph_ok_cnt = 0;
+    for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
+    {
+      if ((channels[i].eph_data.received_mask_proc & 0x7) == 0x7)
+        eph_ok_cnt++;
+    }
+    
+    sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
+    if (eph_ok_cnt == GPS_SAT_CNT)
+    {
+      printf("New pos search\n");
+      gps_pos_solve(channels, obsd);
+    }
+  }
+}
+#endif
+
+
 
 #if (ENABLE_RTCM_SEND)
 void gps_master_transmit_obs(gps_ch_t* channels)
@@ -263,6 +313,7 @@ void gps_master_transmit_obs(gps_ch_t* channels)
   if (uart_prim_is_busy())
     return;
   
+  sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
     if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subrame 1,2,3
@@ -274,10 +325,9 @@ void gps_master_transmit_obs(gps_ch_t* channels)
   }
   
   uint32_t curr_time_ms = signal_capture_get_packet_cnt();
-  if ((curr_time_ms - prev_obs_send_time_ms) > 200)
+  if ((curr_time_ms - prev_obs_send_time_ms) > GPS_RTCM_SEND_PERIOD_MS)
   {
     prev_obs_send_time_ms = curr_time_ms;
-    sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
     sendrtcmobs(obsd, GPS_SAT_CNT);
   }
 }
@@ -313,20 +363,8 @@ uint8_t gps_master_need_acq(void)
   return gps_common_need_acq;
 }
 
-void gps_master_test(gps_ch_t* channels)
-{
-  static uint8_t cnt = 0;
-  if (uart_prim_is_busy())
-    return;
 
-  cnt++;
-  if (cnt >= 4)
-    cnt = 0;
-  
-  sendrtcmnav(&channels[cnt]);
-}
-
-//Reeset all channels to acquisition code search 
+//Reset all channels to acquisition code search 
 void gps_master_reset_to_aqc_start(gps_ch_t* channels)
 {
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)

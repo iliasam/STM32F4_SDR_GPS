@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include "gps_misc.h"
 #include "obs_publish.h"
-#include "rtcm_common.h"
+#include "rtk_common.h"
 
 #define SOLQ_NONE   0
 #define SOLQ_SINGLE 5
@@ -31,7 +31,11 @@ void gps_pos_solve_init(gps_ch_t* channels);
 void gps_pos_solve(gps_ch_t* channels, obsd_t *obs_p);
 void ecef2pos(const double *r, double *pos);
 int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol);
+int pntpos_iterative(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol);
+uint8_t solving_is_busy(void);
 
+
+void solve_test(void);
 #endif
 
 

@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "string.h"
 #include <stdarg.h>
+#include <math.h>
 #if (ENABLE_CALC_POSITION)
   #include "solving.h"
 #endif
@@ -15,14 +16,33 @@
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
-#define PRINT_STATE_BUF_LENGTH          1024
+#define PRINT_STATE_BUF_LENGTH          3000
 #define PRINT_STATE_SEND_PERIOD_MS      150
 #define PRINT_STATE_TRACKING_UPDATE_MS  300
 #define ESC "\033"
 
+#define LAT_DEG_TO_M    (1852.0f * 60.0f)
+
 #define clr_screen()        debug_print(ESC"[2J") //lear the screen, move to (1,1)
 #define gotoxy(x,y)	    debug_print(ESC"[%d;%dH", y, x);
 #define clr_line()	    debug_print(ESC"[2K");
+#define set_blue_color()    debug_print(ESC"[34m");
+#define set_yellow_color()  debug_print(ESC"[33m");
+#define set_red_color()  debug_print(ESC"[31m");
+#define set_white_color()   debug_print(ESC"[37m");
+#define set_gray_color()    debug_print(ESC"[2;37m");
+#define reset_color()       debug_print(ESC"[0m");
+
+#define PLOT_START_Y            11
+#define PLOT_GRID_CELLS_Y       6 //count
+#define PLOT_GRID_CELLS_X       8 //count
+#define PLOT_WIDTH              (PLOT_GRID_STEP_X * 8)
+#define PLOT_GRID_STEP_Y        3 //in chars
+#define PLOT_GRID_STEP_X        7 //in chars
+#define PLOT_HEIGHT             (PLOT_GRID_STEP_Y * PLOT_GRID_CELLS_Y)
+
+#define PLOT_GRID_STEP_Y_M      77 //in m
+#define PLOT_GRID_STEP_X_M      88 //in m
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -34,7 +54,7 @@ uint16_t print_state_cnt = 0;
 
 #if (ENABLE_CALC_POSITION)
   extern sol_t gps_sol;
-  extern double final_pos[3];
+  extern double final_pos[3];//geodetic position {lat,lon,h} (deg,m)
 #endif
 
 /* Private function prototypes -----------------------------------------------*/
@@ -42,6 +62,10 @@ void print_state_channel(gps_ch_t* channel, uint8_t ch_idx);
 void print_state_tracking_channel(gps_ch_t* channel, uint8_t ch_idx);
 void print_state_acquisition_channel(gps_ch_t* channel, uint8_t ch_idx);
 void print_state_update_acquisition_line(gps_ch_t* channel, uint8_t line_idx);
+
+void print_state_draw_point(int16_t x, int16_t y);
+void print_state_conv_pos(float lat, float lon, float *x, float *y);
+void print_state_draw_pooint(float lat, float lon);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -133,6 +157,8 @@ void print_state_update_acquisition(gps_ch_t* channels, uint32_t time_ms)
 void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
 {
   static uint32_t prev_proc_time_ms = 0;
+  static uint8_t have_position = 0;
+  
   uint32_t diff_ms = time_ms - prev_proc_time_ms;
   if (diff_ms < PRINT_STATE_TRACKING_UPDATE_MS)
     return;
@@ -162,6 +188,7 @@ void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
     debug_print("EPH UTC TIME: %s", ctime(&cur_time));
   }
   
+#if (ENABLE_CALC_POSITION)
   if (gps_sol.stat != SOLQ_NONE)
   {
     gotoxy(1,8);
@@ -172,7 +199,15 @@ void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
     gotoxy(1,9);
     clr_line();
     debug_print("POSITION: %2.5f %2.5f", final_pos[0], final_pos[1]);
+    
+    if (have_position == 0)
+      print_state_draw_plot_grid();
+    have_position = 1;
+    
+    print_state_draw_pooint((float)final_pos[0], (float)final_pos[1]);
   }
+#endif
+
 }
 
 //line_idx = 0..3
@@ -281,4 +316,126 @@ void print_state_acquisition_channel(gps_ch_t* channel, uint8_t ch_idx)
   }
 }
 
+//*******************************************************
+//POSITION PLOT
+
+void print_state_draw_plot_grid(void)
+{
+  uint16_t x, y;
+  set_gray_color();
+  
+  //Draw X lines
+  for (y = PLOT_START_Y; y < (PLOT_START_Y + PLOT_HEIGHT + PLOT_GRID_STEP_Y); y+=PLOT_GRID_STEP_Y)
+  {
+      gotoxy(1, y);
+      clr_line();
+      
+      uint8_t step_y = (y - PLOT_START_Y) / PLOT_GRID_STEP_Y;
+      
+      if ((step_y == 0) || (step_y == PLOT_GRID_CELLS_Y))
+      {
+        for (x = 0; x < PLOT_WIDTH; x++)
+          debug_print("=");
+      }
+      else if (step_y == (PLOT_GRID_CELLS_Y / 2))
+      {
+        for (x = 0; x < PLOT_WIDTH; x++)
+          debug_print("-");
+      }
+      else
+      {
+        for (x = 0; x < PLOT_WIDTH; x++)
+          debug_print(".");
+      }
+
+
+      debug_print("\n");
+  }
+
+  
+  //Draw Y lines
+  for (x = 1; x < (PLOT_WIDTH + 2); x+=PLOT_GRID_STEP_X)
+  {
+    uint8_t step_x = (x - 1) / PLOT_GRID_STEP_X;
+    
+    for (y = PLOT_START_Y; y <= (PLOT_START_Y + PLOT_HEIGHT); y++)
+    {
+      gotoxy(x, y);
+      if (step_x == (PLOT_GRID_CELLS_X / 2))
+        debug_print("|");
+      else
+        debug_print(":");
+    }
+  }
+  
+  reset_color();
+  gotoxy(1, PLOT_START_Y + PLOT_HEIGHT + 1);
+  debug_print("HORIZ STEP: %d m", PLOT_GRID_STEP_X_M);
+}
+
+//Draw point with latitude/longitude at the grid
+void print_state_draw_pooint(float lat, float lon)
+{
+  static uint16_t counter = 0;
+  static float x_zero, y_zero;
+  counter++;
+  
+  if (counter == 1)
+  {
+    return;//Skip first point
+  }
+  
+  float x, y;//Pos. Value in m
+  print_state_conv_pos(lat, lon, &x, &y);//Conv. to meters
+  
+  if (counter == 2)
+  {
+    //Latch zeo point
+    x_zero = x;
+    y_zero = y;
+  }
+  //Remove offset
+  x = x - x_zero;
+  y = y - y_zero;
+  
+  float grid_cells_x = x / (float)PLOT_GRID_STEP_X_M;
+  float grid_cells_y = y / (float)PLOT_GRID_STEP_Y_M;
+
+  int16_t chars_x = (int16_t)roundf(grid_cells_x * PLOT_GRID_STEP_X);
+  int16_t chars_y = (int16_t)roundf(grid_cells_y * PLOT_GRID_STEP_Y);
+  
+  print_state_draw_point(chars_x, chars_y);
+}
+
+//Convert Lat/Long coorditates to X/Y in meters - inaccurate
+void print_state_conv_pos(float lat, float lon, float *x, float *y)
+{
+  *y = lat * LAT_DEG_TO_M;
+  float long_deg_to_m = LAT_DEG_TO_M * cosf(lat / 180.0f * 3.1416f);
+  *x = long_deg_to_m * lon;
+}
+
+//x and y is char position, can be psitive and negative
+void print_state_draw_point(int16_t x, int16_t y)
+{
+  y = -y;//invert
+  
+  if (x < (-PLOT_WIDTH / 2))
+    x = (-PLOT_WIDTH / 2);
+  else if (x > (PLOT_WIDTH / 2))
+    x = (PLOT_WIDTH / 2);
+  
+  if (y < (-PLOT_HEIGHT / 2))
+    x = (-PLOT_HEIGHT / 2);
+  else if (x > (PLOT_HEIGHT / 2))
+    y = (PLOT_HEIGHT / 2);
+  
+  x = x + PLOT_WIDTH / 2 + 1;
+  y = y + PLOT_START_Y + PLOT_HEIGHT / 2;
+  
+  //set_red_color();
+  gotoxy(x, y);
+  debug_print("*");
+  //reset_color();
+}
 

@@ -93,6 +93,7 @@ int main(void)
   
   signal_capture_need_data_copy();
   print_state_prepare(gps_channels);
+  
 
   while(1)
   {

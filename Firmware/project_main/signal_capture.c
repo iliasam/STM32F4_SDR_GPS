@@ -144,11 +144,11 @@ void init_spi(void)
 {    
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 
-  SPI_InitTypeDef    SPI_InitStructure;
+  SPI_InitTypeDef SPI_InitStructure;
   GPIO_InitTypeDef GPIO_InitStruct;
   
   RCC_AHB1PeriphClockCmd(SPI_GPIO_CLK, ENABLE);
-  GPIO_InitStruct.GPIO_Pin =  SPI_CLK_PIN | SPI_MISO_PIN;
+  GPIO_InitStruct.GPIO_Pin =  SPI_CLK_PIN | SPI_MOSI_PIN;
   GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
   GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStruct.GPIO_Speed = GPIO_Speed_25MHz;
@@ -156,7 +156,7 @@ void init_spi(void)
   GPIO_Init(SPI_GPIO, &GPIO_InitStruct);
   
   GPIO_PinAFConfig(SPI_GPIO, SPI_CLK_PIN_SRC, SPI_AFIO);
-  GPIO_PinAFConfig(SPI_GPIO, SPI_MISO_PIN_SRC, SPI_AFIO);
+  GPIO_PinAFConfig(SPI_GPIO, SPI_MOSI_PIN_SRC, SPI_AFIO);
   
   SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Rx;
   SPI_InitStructure.SPI_Mode = SPI_Mode_Slave;

@@ -403,6 +403,10 @@
           <name>ICCARM</name>
           <file> 149 22 122 185 179 152 190 107 155 180 160 87 200 27 130 176</file>
         </tool>
+        <tool>
+          <name>BICOMP</name>
+          <file> 122 185 180 152 200 27 22 190 130 149 179 107 155 160 87 176</file>
+        </tool>
       </inputs>
     </file>
     <file>

@@ -58,7 +58,7 @@ int main(void)
   
   // user can enter known doppler frequency to make acquisition much faster
   gps_channels[0].prn = 5;
-  //gps_channels[0].acq_data.given_freq_offset_hz = 900;
+  gps_channels[0].acq_data.given_freq_offset_hz = 900;
   gps_channell_prepare(&gps_channels[0]);
   
   gps_channels[1].prn = 14;

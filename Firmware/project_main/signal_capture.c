@@ -158,7 +158,7 @@ void init_spi(void)
   GPIO_PinAFConfig(SPI_GPIO, SPI_CLK_PIN_SRC, SPI_AFIO);
   GPIO_PinAFConfig(SPI_GPIO, SPI_MOSI_PIN_SRC, SPI_AFIO);
   
-  SPI_InitStructure.SPI_Direction = SPI_Direction_1Line_Rx;
+  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_RxOnly;
   SPI_InitStructure.SPI_Mode = SPI_Mode_Slave;
   SPI_InitStructure.SPI_DataSize = SPI_DataSize_16b;
   SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;//clock polarity - idle low

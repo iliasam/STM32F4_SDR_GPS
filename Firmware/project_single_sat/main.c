@@ -1,5 +1,6 @@
 //Single satellite acquisition and tracking. 
-//Printf is using semihosting via SWO (configured in )
+//Printf is using semihosting via SWO (configured in project config)
+//MCU Core Freq is 168 Mhz
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"

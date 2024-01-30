@@ -13,9 +13,9 @@
 
 #define SPI_GPIO_CLK            RCC_AHB1Periph_GPIOB
 #define SPI_CLK_PIN             GPIO_Pin_13
-#define SPI_MISO_PIN            GPIO_Pin_14
+#define SPI_MOSI_PIN            GPIO_Pin_15 //Slave Input!
 #define SPI_CLK_PIN_SRC         GPIO_PinSource13
-#define SPI_MISO_PIN_SRC        GPIO_PinSource14
+#define SPI_MOSI_PIN_SRC        GPIO_PinSource15
 #define SPI_AFIO                GPIO_AF_SPI2
 #define SPI_GPIO                GPIOB
 

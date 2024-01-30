@@ -220,6 +220,14 @@
       <file>$PROJ_DIR$\..\signal_capture.c</file>
       <file>$PROJ_DIR$\..\main.c</file>
       <file>$PROJ_DIR$\..\stm32f4xx_it.c</file>
+      <file>$PROJ_DIR$\Demo\Obj\uart_comm.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\print_state.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\solving.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\rtcm3e.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\obs_publish.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\rtklib_common.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\gps_master.__cstat.et</file>
+      <file>$PROJ_DIR$\Demo\Obj\keys_controlling.__cstat.et</file>
     </outputs>
     <file>
       <name>[ROOT_NODE]</name>
@@ -358,6 +366,10 @@
           <name>BICOMP</name>
           <file> 167</file>
         </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 216</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
@@ -381,6 +393,10 @@
           <name>BICOMP</name>
           <file> 128</file>
         </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 219</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
@@ -403,6 +419,10 @@
         <tool>
           <name>BICOMP</name>
           <file> 49</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 217</file>
         </tool>
       </outputs>
       <inputs>
@@ -453,6 +473,10 @@
         <tool>
           <name>BICOMP</name>
           <file> 150</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 220</file>
         </tool>
       </outputs>
       <inputs>
@@ -584,6 +608,10 @@
         <tool>
           <name>BICOMP</name>
           <file> 189</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 218</file>
         </tool>
       </outputs>
       <inputs>
@@ -835,6 +863,10 @@
           <name>BICOMP</name>
           <file> 188</file>
         </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 221</file>
+        </tool>
       </outputs>
       <inputs>
         <tool>
@@ -884,6 +916,10 @@
         <tool>
           <name>BICOMP</name>
           <file> 104</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 214</file>
         </tool>
       </outputs>
       <inputs>
@@ -1042,6 +1078,10 @@
         <tool>
           <name>BICOMP</name>
           <file> 33</file>
+        </tool>
+        <tool>
+          <name>__cstat</name>
+          <file> 215</file>
         </tool>
       </outputs>
       <inputs>

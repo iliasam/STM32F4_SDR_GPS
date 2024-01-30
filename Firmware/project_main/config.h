@@ -24,7 +24,7 @@
 #define SPI_BAUDRATE_HZ         (int)(16368000)
 #define PRN_SPEED_HZ            1000 //1ms period
 #define BITS_IN_PRN             (SPI_BAUDRATE_HZ / PRN_SPEED_HZ) //16Kbit
-#define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1024 16bit words
+#define PRN_SPI_WORDS_CNT       (BITS_IN_PRN / 16) //1023 16bit words
 #define PRN_LENGTH              1023 //in chips
 
 #define ENABLE_RTCM_SEND        0
@@ -68,7 +68,7 @@
 
 //*************************************************************************
 
-//PRIMARY UART
+//PRIMARY UART - sending RTCM
 
 #define PRIMARY_UART_NAME       USART2
 #define PRIMARY_UART_AF_NAME    GPIO_AF_USART2

@@ -4,12 +4,14 @@
 #include "stdint.h"
 #include "config.h"
 
-extern uint16_t tmp_sin_data[PRN_SPI_WORDS_CNT];
-extern uint16_t tmp_cos_data[PRN_SPI_WORDS_CNT];
+// Increase bufer size 1023+1=1024 to make space for shifting data
+// So now it is possible to work 
+// with buffers as (GPS_DATA_WORDS_CNT/2=512) 32-bit words
+#define GPS_DATA_WORDS_CNT      (PRN_SPI_WORDS_CNT + 1)
 
-extern uint16_t tmp_prn_data[PRN_SPI_WORDS_CNT];//data with no modulation
-extern uint16_t tmp_data_i[PRN_SPI_WORDS_CNT];
-extern uint16_t tmp_data_q[PRN_SPI_WORDS_CNT];
+extern uint16_t tmp_prn_data[GPS_DATA_WORDS_CNT];//data with no modulation
+extern uint16_t tmp_data_i[GPS_DATA_WORDS_CNT];
+extern uint16_t tmp_data_q[GPS_DATA_WORDS_CNT];
 
 /*
 //Tmp correlation results

@@ -240,11 +240,15 @@ void gps_shift_to_zero_freq_track(
   trk_channel->if_freq_accum = accum;
 }
 
-
+//Fill given buffer with PRN data, 16bit in one PRN chip
+//"data" - destination buffer
+//"offset_bits" can be in range 0-15
+//Used to shift generated data to "offset_bits" bits
+//used for carrier phase shift
 void gps_generate_prn_data2(
   gps_ch_t* channel, uint16_t* data, uint16_t offset_bits)
 {
-  memset(data, 0, PRN_SPI_WORDS_CNT * 2);
+  memset(data, 0, PRN_SPI_WORDS_CNT * 2);//clear buffer
   uint32_t* tmp_p32;
   
   uint32_t wr_word = 0x0000FFFF << (offset_bits & 15);
@@ -263,6 +267,7 @@ void gps_generate_prn_data2(
 //*********************************************************************
 
 //Fill PRN table (1023 bits)
+//Called once at sat. channel init
 void gps_channell_prepare(gps_ch_t* channel)
 {
   if (channel->prn < 1)

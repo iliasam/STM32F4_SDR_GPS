@@ -3,17 +3,19 @@
 #include "stdint.h"
 #include <math.h>
 //#include "delay_us_timer.h"
-#include "intrinsics.h"
+//#include "intrinsics.h"
 #include "string.h"
 #include "common_ram.h"
 
+//This table is used for fast calculating sum of bits
 uint8_t gps_summ_table16[65536];
-uint8_t gps_summ16(uint16_t data);
 
+uint8_t gps_summ16(uint16_t data);
 void gps_generate_prn(uint8_t* dest, int prn);
 
-//888888888888888888888888888888888888888
+//***************************************************************************
 
+//Prepare sum table
 void gps_fill_summ_table(void)
 {
   for (uint32_t i = 0; i < 65536; i++)
@@ -22,6 +24,7 @@ void gps_fill_summ_table(void)
   }
 }
 
+// Return sum of bits in "data"
 uint8_t gps_summ16(uint16_t data)
 {
   uint8_t cnt = 0;
@@ -35,7 +38,13 @@ uint8_t gps_summ16(uint16_t data)
 }
 
 
-//length - data in bytes 
+// Multiply bits (XOR) of arrays (src_i XOR src2), and calculate sum of bits of
+// a final array, same with (src_q XOR src2)
+// src_i/src_q pointer will jump to a start of array when a pointer with offset 
+// will reach end of the array
+// length - data in bytes 
+// offset - offset in bytes
+// summ_i, summ_q - pointer to the result variable
 void gps_mult_and_summ(
   uint8_t* src_i, uint8_t* src_q, uint8_t* src2, 
   uint16_t* summ_i, uint16_t* summ_q, uint16_t length, uint16_t offset)
@@ -83,6 +92,9 @@ void gps_mult_and_summ(
   *summ_q = cnt_q;
 }
 
+// Calculate correlation at certain offset
+// prn_p - satellite PRN data
+// data_i, data_q - received data shifted to a zero frequency
 int16_t gps_correlation8(
   uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset)
 { 
@@ -109,6 +121,10 @@ int16_t gps_correlation8(
   return corr_res;
 }
 
+// Calculate correlation at certain offset
+// prn_p - satellite PRN data
+// data_i, data_q - received data shifted to a zero frequency
+// Results for I/Q  channels will be placed to res_i/res_q
 void gps_correlation_iq(
   uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset, 
   int16_t* res_i, int16_t* res_q)
@@ -128,10 +144,17 @@ void gps_correlation_iq(
   *res_q = summ_q;
 }
 
-//Try to find code phase with best correlation value
+// Try to find code phase with best correlation value
+// by calculating correlation for all offsets
+// prn_p - satellite PRN data
+// data_i, data_q - received data shifted to a zero frequency
+// start_shift/stop_shift - array offsets, bytes [code phase offset]
+// aver_val - average correlation value
+// phase - offset with the highest correlation value
+// Return: maximal found correlation value
 uint16_t correlation_search(
-	uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
-	uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
+  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
+  uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
 {
   //uint32_t start_t = get_dwt_value();
   
@@ -168,19 +191,27 @@ uint16_t correlation_search(
 }
 
 
-//Rewind phase as if we do "steps" of "gps_shift_to_zero_freq_track"
+// Rewind phase as if we do N "steps" of "gps_shift_to_zero_freq_track"
+// Needed for tracking because some tracking steps are skipped for multiplexing
 void gps_rewind_if_phase(gps_tracking_t* trk_channel, uint8_t steps)
 {
-  uint32_t acc_step = (uint32_t)(((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
+  uint32_t acc_step = 
+    (uint32_t)(((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
   uint64_t acc_step64 = (uint64_t)acc_step * BITS_IN_PRN * steps;
   acc_step = (uint32_t)acc_step64;
   
   trk_channel->if_freq_accum += acc_step;
 }
 
-void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz)
+// Shift received signal to "freq_hz" and split it into I/Q channels
+// Suitable only when "freq_hz" is near Fsampling/4 !!!
+// signal_data - received raw data
+// data_i/data_q - processed data
+void gps_shift_to_zero_freq(
+  uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz)
 {
   // Suitable only when Fif is near Fsampling/4
+  //This is Fsampling/4 waveform in binary, period is 4 bits
   const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
   const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
   
@@ -207,7 +238,8 @@ void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data
   }
 }
 
-//With keeping phase
+// Same as gps_shift_to_zero_freq(), but for a trk_channel
+// With keeping phase in "trk_channel->if_freq_accum"
 void gps_shift_to_zero_freq_track(
   gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q)
 {
@@ -240,17 +272,18 @@ void gps_shift_to_zero_freq_track(
   trk_channel->if_freq_accum = accum;
 }
 
-//Fill given buffer with PRN data, 16bit in one PRN chip
-//"data" - destination buffer
-//"offset_bits" can be in range 0-15
-//Used to shift generated data to "offset_bits" bits
-//used for carrier phase shift
+// Fill given buffer with PRN data, 16bit in one PRN chip
+// "data" - destination buffer
+// "offset_bits" can be in range 0-15
+// Used to shift generated data to "offset_bits" bits
+// used for carrier phase shift
 void gps_generate_prn_data2(
   gps_ch_t* channel, uint16_t* data, uint16_t offset_bits)
 {
   memset(data, 0, PRN_SPI_WORDS_CNT * 2);//clear buffer
   uint32_t* tmp_p32;
   
+  //0xFFFF is all 16bits set (one PRN chip)
   uint32_t wr_word = 0x0000FFFF << (offset_bits & 15);
   uint8_t* prn_data_p = channel->prn_code;//array with 0/1 values
   
@@ -264,10 +297,10 @@ void gps_generate_prn_data2(
   }
 }
 
-//*********************************************************************
+//***************************************************************************
 
-//Fill PRN table (1023 bits)
-//Called once at sat. channel init
+// Fill PRN table (1023 bytes, every one is 0/1)
+// Called once at sat. channel init
 void gps_channell_prepare(gps_ch_t* channel)
 {
   if (channel->prn < 1)

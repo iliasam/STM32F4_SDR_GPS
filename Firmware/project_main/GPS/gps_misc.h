@@ -8,7 +8,8 @@
 
 #define GPS_NAV_WORD_LENGTH	        30 //Length in bits
 #define GPS_NAV_SUBFRAME_LENGTH_BYTES	38 //(300/8=38byte)
-//Offset between GPS and UTC time
+
+//Offset between GPS and UTC time, seconds
 #define GPS_UTC_TIME_OFFSET_S           18
 
 #define M_PI 3.1415926535f
@@ -40,40 +41,37 @@ typedef enum
 typedef struct
 {
   uint8_t       freq_index; //Freq search index
-  uint8_t       single_freq_length;
-  int16_t       found_freq_offset_hz;
-  int16_t       given_freq_offset_hz;
-  uint16_t      found_code_phase;
+  int16_t       found_freq_offset_hz; //Found coarse doppler offset, hz
+  int16_t       given_freq_offset_hz; //Given by user coarse doppler offset, hz
+  uint16_t      found_code_phase; //Found code phase value, 0..(2*PRN_LENGTH) range
   
-  uint16_t      code_search_start;
-  uint16_t      code_search_stop;
-  uint16_t      code_hist_step;
+  uint16_t      code_search_start;//Code phase value, 0..(2*PRN_LENGTH) range
+  uint16_t      code_search_stop;//Code phase value, 0..(2*PRN_LENGTH) range
+  uint16_t      code_hist_step;//Length of histogram bin, step is 0.5 chip
   
   gps_acq_state_t state;
   uint8_t       code_phase_histogram[ACQ_PHASE1_HIST_SIZE];
   
-  uint32_t      start_timestamp;
+  uint32_t      start_timestamp;//Used for timeout detectinon
   
-  float hist_ratio;
-} gps_acq_t;
+  float hist_ratio; //Result quality
+} gps_acq_t; //Acquisition information type
 
 typedef struct
 {
-  uint16_t      code_search_start;//1 step is 0.5chip, pretracking
-  uint16_t      code_search_stop;//1 step is 0.5chip, pretracking
+  uint16_t      code_search_start;//1 step is 0.5 chip, pretracking
+  uint16_t      code_search_stop;//1 step is 0.5 chip, pretracking
   
-  float	        if_freq_offset_hz;//doppler
+  float	        if_freq_offset_hz;//doppler offset
   uint32_t      if_freq_accum;//NCO accumulator for keeping phase stable
   uint16_t      pre_track_phases[PRE_TRACK_POINTS_MAX_CNT];
   uint8_t       pre_track_count;
   uint32_t      prev_track_timestamp;
   
-  float	        code_phase_fine;//1 step is (0.5chip / 8)
+  float	        code_phase_fine;//Accurate code phase - 1 step is (0.5chip / 8)
   float	        old_code_phase_fine;//Used by master processing
   uint8_t       code_phase_swap_flag;//Set and clear by master processing
-  
-  uint8_t       debug_flag;
-  
+
   float	        dll_code_err;//Prev. code error, for filtering
   float	        pll_code_err;//Prev. carrier phase error, for filtering, rad
   int16_t       fll_old_i;
@@ -96,7 +94,7 @@ typedef struct
 #endif
   
   gps_tracking_state_t	state;
-} gps_tracking_t;
+} gps_tracking_t; //Tracking information type
 
 typedef struct
 {
@@ -116,7 +114,7 @@ typedef struct
   uint8_t       inv_preabmle_cnt;//Counter of inverte preambles detected
   
   uint8_t       word_buf[GPS_NAV_WORD_LENGTH];//For collecting "word" bits
-  uint8_t       word_cnt;
+  uint8_t       word_cnt;//Number of received words of current subframe
   uint8_t       word_bit_cnt;//Used when preamble is found
   uint8_t       old_D29;//Previous word bit 29, used for parity calc, 0/1
   uint8_t       old_D30;//Previous word bit 30, used for parity calc.
@@ -130,13 +128,15 @@ typedef struct
   uint8_t       new_subframe_flag;//Reset by master processing
   
   uint8_t       subframe_data[GPS_NAV_SUBFRAME_LENGTH_BYTES];//Every bit here is one nav. data bit
-} gps_nav_data_t;
+} gps_nav_data_t; //Nav. data information type
 
 typedef struct
 {
   double pseudorange_m;
   double tow_s;
 } gps_obs_data_t;
+
+// Types below are taken from RTKLIB
 
 typedef struct { /* time struct */
   time_t time;  /* time (s) expressed by standard time_t */
@@ -190,11 +190,8 @@ typedef struct
   uint8_t	        prn_code[PRN_LENGTH];//PRN data (0/1), generated at the start, 1023 bytes
 } gps_ch_t;
 
-
+void gps_fill_summ_table(void);
 void gps_channell_prepare(gps_ch_t* channel);
-
-uint32_t gps_generate_sin_cos(
-  uint16_t* ptr_i, uint16_t* ptr_q, uint16_t length, float freq_hz, uint32_t start_accum);
 
 int16_t gps_correlation8(
   uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, uint16_t offset);
@@ -206,12 +203,10 @@ uint16_t correlation_search(
   uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q,
   uint16_t start_shift, uint16_t stop_shift, uint16_t* aver_val, uint16_t* phase);
 
-void gps_fill_summ_table(void);
-
-
-void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz);
+void gps_shift_to_zero_freq(
+  uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz);
 void gps_shift_to_zero_freq_track(
-	gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q);
+  gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q);
 
 void gps_generate_prn_data2(
   gps_ch_t* channel, uint16_t* data, uint16_t offset_bits);

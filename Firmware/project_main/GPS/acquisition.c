@@ -14,12 +14,14 @@
 #define ACQ_CODE_SEARCH2_WIDTH                  500//PRN steps
 #define ACQ_CODE_SEARCH3_WIDTH                  60//PRN steps
 
+#define ACQ_SINGLE_FREQ_LENGTH           10
+
 
 // Histogram, one item is for one freq. step, used for freq. search
 uint32_t acq_histogram[ACQ_COUNT];
 uint16_t acq_histogram_cnt = 0;
 
-//This is not a histogram, sorted when being processed, ussed for freq. search only
+//This is not a histogram, sorted when being processed, used for freq. search only
 uint16_t acq_single_freq_phases[FREQ_SEARCH_POINTS_MAX_CNT];
 uint8_t acq_single_freq_count = 0;
 
@@ -68,7 +70,6 @@ void acquisition_start_channel(gps_ch_t* channel)
     
     acquisition_single_freq_check_reset();
     channel->acq_data.freq_index = 0;
-    channel->acq_data.single_freq_length = 10;
     channel->acq_data.state = GPS_ACQ_FREQ_SEARCH_RUN;
   }
 }
@@ -171,7 +172,7 @@ void acquisition_process_channel(gps_ch_t* channel, uint8_t* data)
   return;
 }
 
-/// Check collected data using histoogram analyse(no sorting)
+/// Check collected data using histogram analyse(no sorting)
 /// Can be long!
 void acquisition_code_phase_search(gps_ch_t* channel, uint8_t* data)
 {
@@ -282,7 +283,7 @@ void acquisition_freq_search(gps_ch_t* channel, uint8_t* data)
   acq_single_freq_phases[acq_single_freq_count] = best_phase;
   acq_single_freq_count++;
   
-  if (acq_single_freq_count >= channel->acq_data.single_freq_length)
+  if (acq_single_freq_count >= ACQ_SINGLE_FREQ_LENGTH)
   {
     acquisition_process_single_freq_data(channel, acq_single_freq_count);
     acquisition_process_single_freq_histogram(channel);

@@ -31,7 +31,7 @@ void init_dma(void);
 
 //************************************************************************
 
-// Return count of received data blocks, analog of system time
+// Return count of received data blocks, a kind of of system time
 uint32_t signal_capture_get_packet_cnt(void)
 {
   return signal_capture_packet_cnt;
@@ -56,13 +56,13 @@ uint8_t* signal_capture_get_ready_buf(void)
 // Called every 1ms (see PRN_SPEED_HZ)
 void SPI_DMA_IRQ_HANDLER(void)
 {
-  if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_HTIF3))
+  if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_HTIF3))//half complete
   {
     DMA_ClearFlag(SPI_DMA_STREAM, DMA_FLAG_HTIF3);
     spi_curr_ready_rx_buf = &spi_rx_buffer[0];
   }
   
-  if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_TCIF3))
+  if (DMA_GetFlagStatus(SPI_DMA_STREAM, DMA_FLAG_TCIF3))//full complete
   {
     DMA_ClearFlag(SPI_DMA_STREAM, DMA_FLAG_TCIF3);
     spi_curr_ready_rx_buf = &spi_rx_buffer[PRN_SPI_WORDS_CNT];
@@ -129,7 +129,7 @@ uint8_t signal_capture_have_irq(void)
 }
 
 // Called by external code
-// Notify signal cpaturing part that we need copied data
+// Notify signal capturing part that we need copied data
 void signal_capture_need_data_copy(void)
 {
   signal_capture_need_copy_flag = 1;

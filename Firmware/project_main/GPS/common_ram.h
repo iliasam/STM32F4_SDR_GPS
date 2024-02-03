@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include "config.h"
 
-// Increase bufer size 1023+1=1024 to make space for shifting data
+// Increase buffer size 1023+1=1024 to make space for shifting data
 // So now it is possible to work 
 // with buffers as (GPS_DATA_WORDS_CNT/2=512) 32-bit words
 #define GPS_DATA_WORDS_CNT      (PRN_SPI_WORDS_CNT + 1)

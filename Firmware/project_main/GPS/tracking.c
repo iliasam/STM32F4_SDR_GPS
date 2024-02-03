@@ -298,12 +298,9 @@ void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
   }
 }
 
-void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, int16_t IL, int16_t QL)
+void gps_tracking_dll(
+  gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, int16_t IL, int16_t QL)
 {
-  //static float avr_summ = 0.0f;
-  //static uint8_t summ_cnt = 0;
-  //static int packet_cnt = 0;
-  
   int32_t IE2 = (int32_t)IE * (int32_t)IE;
   int32_t QE2 = (int32_t)QE * (int32_t)QE;
   
@@ -314,32 +311,46 @@ void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, 
   int32_t part2 = (IE2 + QE2) + (IL2 + QL2);
   float code_err = (float)part1 / (float)part2;
   
-  //float code_err = (sqrtf(IE2 + QE2) - sqrtf(IL2 + QL2)) / 
-  //	(sqrtf(IE2 + QE2) + sqrtf(IL2 + QL2));
-  
   code_err = -code_err;
   
   float dt_s = 0.001f;
   /* 2nd order DLL */
-  channel->tracking_data.code_phase_fine += (TRACKING_DLL1_C1 * (code_err - channel->tracking_data.dll_code_err) +
-                                             TRACKING_DLL1_C2 * dt_s * code_err);
   
+  channel->tracking_data.code_phase_fine += 
+    (TRACKING_DLL1_C1 * (code_err - channel->tracking_data.dll_code_err) +
+    TRACKING_DLL1_C2 * dt_s * code_err);
+  
+  uint8_t code_phase_swap_flag = 0;
   if (channel->tracking_data.code_phase_fine < 0.0f)
   {
     channel->tracking_data.code_phase_fine = 
-      (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO) - channel->tracking_data.code_phase_fine;
+      (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO) - 
+        channel->tracking_data.code_phase_fine;
+    code_phase_swap_flag = 1;
   }
-  else if (channel->tracking_data.code_phase_fine > (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO))
+  else if (channel->tracking_data.code_phase_fine > 
+           (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO))
   {
     channel->tracking_data.code_phase_fine =
-      channel->tracking_data.code_phase_fine - (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO);
+      channel->tracking_data.code_phase_fine - 
+      (float)(PRN_LENGTH * 2 * GPS_FINE_RATIO);
+    code_phase_swap_flag = 1;
   }
   
-  //packet_cnt++;
-  //channel->tracking_data.code_phase_fine2 = (2039.8f - (float)packet_cnt * 0.001407) * 8.0f;
-  //channel->tracking_data.code_phase_fine2 = (64.5f + (float)packet_cnt * (1.0f / 30.0f / 8.0f)) * 8.0f;
-  //channel->tracking_data.code_phase_fine2 = (60.0f) * 8.0f;
-  
+#if (ENABLE_CODE_FILTER)
+  if (code_phase_swap_flag)
+  {
+    //Cant filter alasyly that, so stop filteing in this iterations
+    channel->tracking_data.code_phase_fine_filt = -1.0f;
+  }
+  else if (channel->tracking_data.code_phase_fine_filt >= 0.0f)
+  {
+    channel->tracking_data.code_phase_fine_filt += 
+    channel->tracking_data.code_phase_fine;
+    channel->tracking_data.code_filt_cnt++;
+  }
+#endif
+        
   channel->tracking_data.dll_code_err = code_err;
   
   //float tmp_code = channel->tracking_data.code_phase_fine2 / 8.0f;

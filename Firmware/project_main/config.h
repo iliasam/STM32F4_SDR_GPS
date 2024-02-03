@@ -32,6 +32,10 @@
 //Calculate receiver position by observations
 #define ENABLE_CALC_POSITION    1
 
+// Accurate code phase averaging
+#define ENABLE_CODE_FILTER      1
+//Number of measurements, speed is 25 measurements in one channel per 100ms
+#define CODE_FILTER_LENGTH      100
 
 
 #define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
@@ -92,7 +96,7 @@
 #define PRIMARY_DMA_FLAG        DMA_FLAG_TCIF6
 #define PRIMARY_DMA_TX_CH       DMA_Channel_4
 
-//SECONDARY UART
+//SECONDARY UART - sending GPS status to the terminal emulator
 
 #define SECONDARY_UART_NAME     USART3
 #define SECONDARY_UART_AF_NAME  GPIO_AF_USART3

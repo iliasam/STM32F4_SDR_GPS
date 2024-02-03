@@ -89,6 +89,12 @@ typedef struct
   uint16_t      snr_summ_cnt;
   float	        snr_value;
   
+#if (ENABLE_CODE_FILTER)  
+  uint32_t      filt_start_time_ms; //Time of code fiter start
+  uint16_t      code_filt_cnt; //Number of of intergated point
+  float	        code_phase_fine_filt;//Filter result - 1 step is (0.5chip / 8)
+#endif
+  
   gps_tracking_state_t	state;
 } gps_tracking_t;
 

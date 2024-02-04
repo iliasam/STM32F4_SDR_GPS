@@ -13,7 +13,6 @@
 #include "config.h"
 #include <math.h>
 
-
 void decode_subfrm1(const uint8_t *buff, sdreph_t *eph);
 void decode_subfrm2(const uint8_t *buff, sdreph_t *eph);
 void decode_subfrm3(const uint8_t *buff, sdreph_t *eph);
@@ -26,8 +25,6 @@ uint32_t getbitu2(const uint8_t *buff, int p1, int l1, int p2, int l2);
 int32_t getbits2(const uint8_t *buff, int p1, int l1, int p2, int l2);
 
 int adjgpsweek(int week);
-
-//******************************************************************
 
 
 //****************************************************
@@ -186,6 +183,5 @@ int32_t getbits2(const uint8_t *buff, int p1, int l1, int p2, int l2)
 
 int adjgpsweek(int week)
 {
-  const int fixed_build_gps_week = 2290;//NOV 2023
-  return week + (fixed_build_gps_week - week + 512) / 1024 * 1024;
+  return week + (GPS_BUILD_WEEK - week + 512) / 1024 * 1024;
 }

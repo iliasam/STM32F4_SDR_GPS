@@ -70,6 +70,8 @@
 #define TRACKING_FLL1_C1        (200.0f)
 #define TRACKING_FLL1_C2        (2000.0f)
 
+#define GPS_BUILD_WEEK          2290 //NOV 2023
+
 //*************************************************************************
 
 //PRIMARY UART - sending RTCM

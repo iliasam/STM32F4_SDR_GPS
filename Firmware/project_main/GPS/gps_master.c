@@ -19,8 +19,6 @@
   #include "solving.h"
 #endif
 
-
-
 #if (ENABLE_RTCM_SEND)
   #include "obs_publish.h"
 #endif

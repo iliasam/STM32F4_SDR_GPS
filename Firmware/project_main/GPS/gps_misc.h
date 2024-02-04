@@ -99,7 +99,7 @@ typedef struct
 typedef struct
 {
   uint8_t       period_sync_ok_flag;
-  uint8_t       right_period_cnt;
+  uint8_t       right_period_cnt;//Incremented if nav. data period is looking OK
   uint32_t      old_swap_time;//Perv. time of sign switch detection, PRN counter ticks. Not accurate. Updated with period 20ms*n
   uint8_t       old_reminder;//Used for nav bit extraction
   

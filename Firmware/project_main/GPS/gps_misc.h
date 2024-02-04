@@ -40,7 +40,7 @@ typedef enum
 
 typedef struct
 {
-  uint8_t       freq_index; //Freq search index
+  uint8_t       freq_index; //Freq search index, 0 is -ACQ_SEARCH_FREQ_HZ, max is (ACQ_COUNT-1)
   int16_t       found_freq_offset_hz; //Found coarse doppler offset, hz
   int16_t       given_freq_offset_hz; //Given by user coarse doppler offset, hz
   uint16_t      found_code_phase; //Found code phase value, 0..(2*PRN_LENGTH) range
@@ -50,7 +50,7 @@ typedef struct
   uint16_t      code_hist_step;//Length of histogram bin, step is 0.5 chip
   
   gps_acq_state_t state;
-  uint8_t       code_phase_histogram[ACQ_PHASE1_HIST_SIZE];
+  uint8_t       code_phase_histogram[ACQ_PHASE1_HIST_SIZE];//Used for detecting coarse code phase
   
   uint32_t      start_timestamp;//Used for timeout detectinon
   

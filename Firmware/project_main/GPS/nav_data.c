@@ -118,8 +118,6 @@ void gps_nav_data_analyse_new_code(gps_ch_t* channel, uint8_t index, int16_t new
     }
     
     //sprintf(tmp_txt, "SWAP=%ld\n", swap_timestamp);
-    //OutputDebugString((LPCSTR)tmp_txt);
-    
     channel->nav_data.old_swap_time = swap_timestamp;
     
     //Two values has one sign, and another two - another sign
@@ -264,7 +262,6 @@ void gps_nav_data_words_detection(gps_ch_t* channel, uint8_t new_bit)
       
       //char tmp_txt[100];
       //sprintf(tmp_txt, "PREAMBLE!\n");
-      //OutputDebugString((LPCSTR)tmp_txt);
     }
     
     if ((channel->nav_data.polarity_found == 0) && 

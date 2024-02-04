@@ -64,8 +64,8 @@ typedef struct
   
   float	        if_freq_offset_hz;//doppler offset
   uint32_t      if_freq_accum;//NCO accumulator for keeping phase stable
-  uint16_t      pre_track_phases[PRE_TRACK_POINTS_MAX_CNT];
-  uint8_t       pre_track_count;
+  uint16_t      pre_track_phases[PRE_TRACK_POINTS_MAX_CNT];//Array of code phases, sorted
+  uint8_t       pre_track_count;//Incremented at the end of channel time slot
   uint32_t      prev_track_timestamp;
   
   float	        code_phase_fine;//Accurate code phase - 1 step is (0.5chip / 8)

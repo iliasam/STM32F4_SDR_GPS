@@ -321,7 +321,7 @@ int compare_freq1_function(const void * a, const void * b)
 //Fill histogram "acq_freq_histogram"
 void acquisition_process_single_freq_data(gps_ch_t* channel, uint8_t points_cnt)
 {
-  // Same phases after sorting will go one by one, so we can detect chains
+  // Same code phases after sorting will go one by one, so we can detect chains
   qsort(acq_single_freq_phases, points_cnt, 
     sizeof(uint16_t), compare_freq1_function);
   uint8_t chain_items = 0; // Number of elements in one chain

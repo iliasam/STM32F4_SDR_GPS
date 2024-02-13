@@ -37,7 +37,6 @@ gps_ch_t gps_channels[GPS_SAT_CNT];
 /* Private function prototypes -----------------------------------------------*/
 void main_process_acq_data(void);
 
-uint8_t need_slow_data_proc(void);
 void main_slow_data_proc(void);
 void main_fast_data_proc(void);
 
@@ -94,7 +93,6 @@ int main(void)
   signal_capture_need_data_copy();
   print_state_prepare(gps_channels);
   
-
   while(1)
   {
     uint8_t need_slow = gps_master_need_acq();

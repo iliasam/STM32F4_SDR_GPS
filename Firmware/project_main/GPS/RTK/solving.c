@@ -99,7 +99,7 @@ int lsq(const double *A, const double *y, int n, int m, double *x, double *Q);
 //****************************************************
 //****************************************************
 
-//Initiaize pointers
+//Initialize pointers
 void gps_pos_solve_init(gps_ch_t* channels)
 {
   //Copy pointers
@@ -110,9 +110,9 @@ void gps_pos_solve_init(gps_ch_t* channels)
   nav_data.n = GPS_SAT_CNT;
 }
 
-// Main function, disigned to be iterative
+// Main function, designed to be iterative
 // User need to call it until solving_is_busy() return 0
-// Expected that any iteration takees less than 1ms
+// Expected that any iteration take less than 1ms
 void gps_pos_solve(obsd_t *obs_p)
 {
   uint32_t start_t = get_dwt_value();
@@ -208,7 +208,7 @@ int pntpos_iterative(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol)
     printf("Code1\n");
   }
   
-  int res;
+  int res = -1;
   if (satposs_busy)
   {
     /* satellite positons, velocities and clocks */

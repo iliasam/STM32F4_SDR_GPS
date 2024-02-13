@@ -11,6 +11,7 @@
 #include "print_state.h"
 #include "config.h"
 #include "acquisition.h"
+#include "rtk_common.h"
 #include "keys_controlling.h"
 #include "math.h"
 #include "time.h"
@@ -153,7 +154,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
 }
 
 
-//Called every 17ms, when the is no tracking working
+//Called every 17ms, when there is no tracking working
 void gps_master_nav_handling(gps_ch_t* channels)
 {
   //Set first subframe detection time for all channels
@@ -195,7 +196,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
     return;
   
   uint32_t diff_ms = max_subframe_time - min_subframe_time;
-  if (diff_ms > 100)//wait untill all subframes of this epoch get received (they will have similiar times)
+  if (diff_ms > 100)//wait until all subframes of this epoch get received (they will have similar times)
     return;
   
   if ((has_subframe_time_cnt == GPS_SAT_CNT) && 
@@ -280,7 +281,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
   #endif
 }
 
-// Final pseudoranges and observaltions calculation
+// Final pseudoranges and observations calculation
 // channels - receiver channels
 // curr_tick_time - current receiving time in ms
 // ref_time_diff_ms - 
@@ -302,7 +303,7 @@ void gps_master_final_pseudorange_calc(
       channels[i].tracking_data.code_phase_fine / ((double)PRN_LENGTH * 16.0f);
 #endif
     
-    //Comepensating state when code phase swapped, but new subframe has not come yet
+    //Compensating state when code phase swapped, but new subframe has not come yet
     if (channels[i].tracking_data.code_phase_swap_flag == 1)
     {
       double corr_ms = 1.0f;
@@ -324,7 +325,7 @@ void gps_master_final_pseudorange_calc(
 uint16_t gps_master_filter_code_phase(
   gps_ch_t* channels, uint32_t curr_tick_time)
 {
-  //Count channels that have enough captured pointes
+  //Count channels that have enough captured points
   uint8_t filter_ready_cnt = 0;
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
@@ -380,14 +381,14 @@ void gps_master_code_phase_filter_reset(
 
 
 #if (ENABLE_CALC_POSITION)
-//Calculate receiver positon - handling
+//Calculate receiver position - handling
 void gps_master_calculate_pos(gps_ch_t* channels)
 {
   static uint32_t prev_calc_time_ms = 0;
   
   if (solving_is_busy())
   {
-    //Processing already runing solving
+    //Solving processing is already running
     gps_pos_solve(obsd);
     return;
   }

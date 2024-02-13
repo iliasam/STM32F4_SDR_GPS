@@ -205,6 +205,7 @@ void gps_rewind_if_phase(gps_tracking_t* trk_channel, uint8_t steps)
 
 // Shift received signal to "freq_hz" and split it into I/Q channels
 // Suitable only when "freq_hz" is near Fsampling/4 !!!
+// This is "Carrier NCO" with multiplication
 // signal_data - received raw data
 // data_i/data_q - processed data
 void gps_shift_to_zero_freq(
@@ -273,6 +274,7 @@ void gps_shift_to_zero_freq_track(
 }
 
 // Fill given buffer with PRN data, 16bit in one PRN chip
+// This is "Code NCO"
 // "data" - destination buffer
 // "offset_bits" can be in range 0-15
 // Used to shift generated data to "offset_bits" bits

@@ -1,4 +1,4 @@
-//Printring state of GPS receiving
+//Printing state of GPS receiving
 
 /* Includes ------------------------------------------------------------------*/
 #include "config.h"
@@ -63,9 +63,9 @@ void print_state_tracking_channel(gps_ch_t* channel, uint8_t ch_idx);
 void print_state_acquisition_channel(gps_ch_t* channel, uint8_t ch_idx);
 void print_state_update_acquisition_line(gps_ch_t* channel, uint8_t line_idx);
 
-void print_state_draw_point(int16_t x, int16_t y);
+void print_state_draw_point_terminal(int16_t x, int16_t y);
 void print_state_conv_pos(float lat, float lon, float *x, float *y);
-void print_state_draw_pooint(float lat, float lon);
+void print_state_draw_point(float lat, float lon);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -134,7 +134,7 @@ void print_state_update_acquisition(gps_ch_t* channels, uint32_t time_ms)
     }
   }
   
-  //Update the channel that is scaned now
+  //Update the channel that is scanned now
   if (changed_flag == 0)
   {
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
@@ -204,7 +204,7 @@ void print_state_update_tracking(gps_ch_t* channels, uint32_t time_ms)
       print_state_draw_plot_grid();
     have_position = 1;
     
-    print_state_draw_pooint((float)final_pos[0], (float)final_pos[1]);
+    print_state_draw_point((float)final_pos[0], (float)final_pos[1]);
   }
 #endif
 
@@ -374,7 +374,7 @@ void print_state_draw_plot_grid(void)
 }
 
 //Draw point with latitude/longitude at the grid
-void print_state_draw_pooint(float lat, float lon)
+void print_state_draw_point(float lat, float lon)
 {
   static uint16_t counter = 0;
   static float x_zero, y_zero;
@@ -404,10 +404,10 @@ void print_state_draw_pooint(float lat, float lon)
   int16_t chars_x = (int16_t)roundf(grid_cells_x * PLOT_GRID_STEP_X);
   int16_t chars_y = (int16_t)roundf(grid_cells_y * PLOT_GRID_STEP_Y);
   
-  print_state_draw_point(chars_x, chars_y);
+  print_state_draw_point_terminal(chars_x, chars_y);
 }
 
-//Convert Lat/Long coorditates to X/Y in meters - inaccurate
+//Convert Lat/Long coordinates to X/Y in meters - inaccurate
 void print_state_conv_pos(float lat, float lon, float *x, float *y)
 {
   *y = lat * LAT_DEG_TO_M;
@@ -415,8 +415,9 @@ void print_state_conv_pos(float lat, float lon, float *x, float *y)
   *x = long_deg_to_m * lon;
 }
 
-//x and y is char position, can be psitive and negative
-void print_state_draw_point(int16_t x, int16_t y)
+//Draw poinnt at the terminal
+//x and y is char position, can be positive and negative
+void print_state_draw_point_terminal(int16_t x, int16_t y)
 {
   y = -y;//invert
   

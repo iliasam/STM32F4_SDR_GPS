@@ -194,13 +194,13 @@ void gps_tracking_pll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
   float dt_s = 0.001f;
   if (channel->nav_data.period_sync_ok_flag)
   {
-    channel->tracking_data.if_freq_offset_hz +=
+    channel->tracking_data.if_freq_offset_hz -=
       TRACKING_PLL2_C1 * phase_diff_old +
         (TRACKING_PLL2_C2 * dt_s * carr_phase_err_rad);
   }
   else
   {
-    channel->tracking_data.if_freq_offset_hz +=
+    channel->tracking_data.if_freq_offset_hz -=
       TRACKING_PLL1_C1 * phase_diff_old +
         (TRACKING_PLL1_C2 * dt_s * carr_phase_err_rad);
   }
@@ -244,7 +244,7 @@ void gps_tracking_fll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
   
   float dt_s = 0.001f;
   float diff_f_hz = TRACKING_FLL1_C1 * dt_s * old_diff_rad + (TRACKING_FLL1_C2 * dt_s * freq_diff_rad);
-  channel->tracking_data.if_freq_offset_hz += diff_f_hz;
+  channel->tracking_data.if_freq_offset_hz -= diff_f_hz;
   
   channel->tracking_data.fll_old_i = IP;
   channel->tracking_data.fll_old_q = QP;

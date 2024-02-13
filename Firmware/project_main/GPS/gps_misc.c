@@ -229,8 +229,8 @@ void gps_shift_to_zero_freq(
   for (word_cnt = 0; word_cnt < (PRN_SPI_WORDS_CNT / 2); word_cnt++)//to get 32bit words
   {
     uint32_t phase = (accum >> 30);//upper 2 bits
-    *ptr_i32 = sin_buf32[phase] ^ *signal_p32;
-    *ptr_q32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_i32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_q32 = sin_buf32[phase] ^ *signal_p32;
     accum += acc_step;
     
     ptr_i32++;
@@ -261,8 +261,8 @@ void gps_shift_to_zero_freq_track(
   for (word_cnt = 0; word_cnt < (PRN_SPI_WORDS_CNT / 2); word_cnt++)//to get 32bit words
   {
     uint32_t phase = (accum >> 30);//upper 2 bits
-    *ptr_i32 = sin_buf32[phase] ^ *signal_p32;
-    *ptr_q32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_i32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_q32 = sin_buf32[phase] ^ *signal_p32;
     accum += acc_step;
     
     ptr_i32++;

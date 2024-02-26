@@ -331,11 +331,12 @@ void acquisition_process_single_freq_data(gps_ch_t* channel, uint8_t points_cnt)
   for (uint8_t i = 1; i < points_cnt; i++)
   {
     //Difference between to sequential items
-    uint16_t diff = acq_single_freq_phases[i] - acq_single_freq_phases[i - 1];
+    int16_t diff = (int16_t)acq_single_freq_phases[i] - 
+      (int16_t)acq_single_freq_phases[i - 1];
     if (abs(diff) < 3)
       same_flag = 1;//Code phase values are close to each other
     
-    if (diff < 15)
+    if (abs(diff) < 15)
       chain_items++;
     else
     {

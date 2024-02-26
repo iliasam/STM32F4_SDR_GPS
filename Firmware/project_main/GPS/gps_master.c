@@ -1,5 +1,8 @@
-//GPS master is a code that controllig acquisition in all channels, start tracking
-//and controllling sending RTCM and position calculation
+//GPS master is a code that controlling acquisition in all channels, start tracking
+//and controlling sending RTCM and position calculation
+
+// I'm not sure that gps_master_nav_handling() will work OK inn all cases
+//This is just a demo!
 
 #include "stdint.h"
 #include "string.h"
@@ -64,8 +67,6 @@ void gps_master_code_phase_filter_reset(
 
 void gps_master_handling(gps_ch_t* channels, uint8_t index)
 {
-  //gps_ch_t* curr_ch = channels;
-  
   if (gps_start_flag)
   {
     gps_start_flag = 0;
@@ -120,7 +121,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
   
   if (gps_common_need_acq == 0)
   {
-    //acq is done at all sats. -> start tracking!
+    //Acq. is done at all sats. -> start tracking!
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
     {
       if (channels[i].tracking_data.state == GPS_TRACKNG_IDLE)
@@ -154,7 +155,7 @@ void gps_master_handling(gps_ch_t* channels, uint8_t index)
 }
 
 
-//Called every 17ms, when there is no tracking working
+//  Called every 17ms, when there is no tracking working
 void gps_master_nav_handling(gps_ch_t* channels)
 {
   //Set first subframe detection time for all channels
@@ -206,6 +207,7 @@ void gps_master_nav_handling(gps_ch_t* channels)
     //Lock "first_subframe_time"
     for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
     {
+      //ZERO moment 
       channels[i].nav_data.first_subframe_time = 
         channels[i].nav_data.last_subframe_time;
       channels[i].nav_data.subframe_cnt = 0;
@@ -213,11 +215,12 @@ void gps_master_nav_handling(gps_ch_t* channels)
   }
   
   //************************************************
-  //Pseudorange calculation
+  // Pseudorange calculation
   
   if (channels[0].nav_data.first_subframe_time == 0)
     return;
   
+  // Time from ZERO event, in 6s steps
   uint32_t ref_time_ms = channels[ref_idx].nav_data.first_subframe_time + 
     max_subframe_cnt * SUBFRAME_DURATION_MS;
   
@@ -245,9 +248,10 @@ void gps_master_nav_handling(gps_ch_t* channels)
   
   uint32_t curr_tick_time = signal_capture_get_packet_cnt();//system time, ms
   
-  //Time from last subframe of REF sat.
+  //Time from last subframe of REF sat. Should be in range 0..6000ms
   int32_t ref_time_diff_ms = (int32_t)curr_tick_time - 
     (int32_t)channels[ref_idx].nav_data.last_subframe_time;
+  
   if ((ref_time_diff_ms < 0))
     ref_time_diff_ms = ref_time_diff_ms % SUBFRAME_DURATION_MS;
   
@@ -284,8 +288,8 @@ void gps_master_nav_handling(gps_ch_t* channels)
 // Final pseudoranges and observations calculation
 // channels - receiver channels
 // curr_tick_time - current receiving time in ms
-// ref_time_diff_ms - 
-// ref_time_ms - 
+// ref_time_diff_ms - Time from last subframe of REF sat. Should be in range 0..6000ms
+// ref_time_ms - Time from ZERO event, in 6s steps
 // ref_idx - index of reference satellite in ms
 void gps_master_final_pseudorange_calc(
   gps_ch_t* channels, uint32_t curr_tick_time, 
@@ -293,8 +297,13 @@ void gps_master_final_pseudorange_calc(
 {
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
+    // Relative TOF in ms; reference sat at ZERO moment have this value =0
+    // At ZERO moment others are not very big (< 40)
     int32_t diff_prn_ms = channels[i].nav_data.last_subframe_time - ref_time_ms;
     
+    // ch_diff_time_ms - Relative TOF in ms, but with higher resolution
+    // Added data from code phase
+    // Changes only when code phase swap happens >> 6s
 #if (ENABLE_CODE_FILTER)
     double ch_diff_time_ms = (double)diff_prn_ms + 
       channels[i].tracking_data.code_phase_fine_filt / ((double)PRN_LENGTH * 16.0f);
@@ -429,7 +438,7 @@ void gps_master_transmit_obs(gps_ch_t* channels)
   sdrobs2obsd(channels, GPS_SAT_CNT, obsd);
   for (uint8_t i = 0; i < GPS_SAT_CNT; i++)
   {
-    if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subrame 1,2,3
+    if (channels[i].eph_data.received_mask & 0x7 == 0x7) //subframe 1,2,3
     {
       channels[i].eph_data.received_mask &= ~0x7;//clear mask
       sendrtcmnav(&channels[i]);

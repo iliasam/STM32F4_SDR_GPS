@@ -82,6 +82,7 @@ int main(void)
   gps_channels[3].prn = 16;
   gps_channell_prepare(&gps_channels[3]);
   */
+  
 #if (ENABLE_CALC_POSITION)
   gps_pos_solve_init(gps_channels);
 #endif

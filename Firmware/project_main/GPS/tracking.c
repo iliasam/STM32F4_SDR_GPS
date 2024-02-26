@@ -267,7 +267,7 @@ void gps_tracking_pll_check(gps_ch_t* channel, uint8_t index, int16_t new_ip)
   if (index < (TRACKING_CH_LENGTH - 1))
     return;
   
-  //come here then "index" is at end (index == TRACKING_CH_LENGTH - 1)
+  //come here when "index" is at end (index == TRACKING_CH_LENGTH - 1)
   //Count number of sign switching
   uint8_t swith_counter = 0;//sign switch
   uint8_t pol_old = (channel->tracking_data.pll_check_buf[0] > 0) ? 1 : 0;

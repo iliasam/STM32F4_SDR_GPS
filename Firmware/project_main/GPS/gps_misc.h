@@ -124,7 +124,7 @@ typedef struct
   
   uint32_t      last_subframe_time;//Time of the subframe start in PRN/ms, updated with 6s period, based on accur time.
   uint32_t      first_subframe_time;//Time of the subframe start in PRN/ms, updated once, for detecting ref. sat.
-  uint16_t      subframe_cnt;//Subframe counter
+  uint16_t      subframe_cnt;//Subframe counter, increased in tracking, reset once by master processing
   uint8_t       new_subframe_flag;//Reset by master processing
   
   uint8_t       subframe_data[GPS_NAV_SUBFRAME_LENGTH_BYTES];//Every bit here is one nav. data bit

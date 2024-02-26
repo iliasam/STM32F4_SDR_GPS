@@ -73,7 +73,7 @@ void gps_mult_and_summ(
     cnt_q += gps_summ_table16[tmp_q];
   }
   
-  //reset to start of buffer
+  //reset to the start of buffer
   src_i_p16 = (uint16_t*)(src_i + small_offset);
   src_q_p16 = (uint16_t*)(src_q + small_offset);
   
@@ -205,14 +205,14 @@ void gps_rewind_if_phase(gps_tracking_t* trk_channel, uint8_t steps)
 
 // Shift received signal to "freq_hz" and split it into I/Q channels
 // Suitable only when "freq_hz" is near Fsampling/4 !!!
-// This is "Carrier NCO" with multiplication
+// This is "Carrier NCO" with XOR multiplication
 // signal_data - received raw data
 // data_i/data_q - processed data
 void gps_shift_to_zero_freq(
   uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q, float freq_hz)
 {
   // Suitable only when Fif is near Fsampling/4
-  //This is Fsampling/4 waveform in binary, period is 4 bits
+  //This is Fsampling/4 waveform in binary, period is 4 bit
   const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
   const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
   
@@ -249,7 +249,7 @@ void gps_shift_to_zero_freq_track(
   
   uint32_t acc_step = (uint32_t)(
     ((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
-  uint64_t acc_step64 = (uint64_t)acc_step * 32;
+  uint64_t acc_step64 = (uint64_t)acc_step * 32;//we do 32steps per 1 word
   acc_step = (uint32_t)acc_step64;
   
   uint32_t accum = trk_channel->if_freq_accum;

@@ -38,7 +38,7 @@
 #define CODE_FILTER_LENGTH      100
 
 
-#define ACQ_SEARCH_FREQ_HZ      (7000) //Search zone is x2
+#define ACQ_SEARCH_FREQ_HZ      (7000) //Frequency Search zone is x2. Doppler offset
 #define ACQ_SEARCH_STEP_HZ      (500)
 /// Number of freq steps
 #define ACQ_COUNT       (ACQ_SEARCH_FREQ_HZ * 2 / ACQ_SEARCH_STEP_HZ + 1)

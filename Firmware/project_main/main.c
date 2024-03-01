@@ -72,17 +72,6 @@ int main(void)
   gps_channels[3].acq_data.given_freq_offset_hz = 2000;
   gps_channell_prepare(&gps_channels[3]);
   
-  /*
-  gps_channels[0].prn = 10;
-  gps_channell_prepare(&gps_channels[0]);
-  gps_channels[1].prn = 23;
-  gps_channell_prepare(&gps_channels[1]);
-  gps_channels[2].prn = 26;
-  gps_channell_prepare(&gps_channels[2]);
-  gps_channels[3].prn = 16;
-  gps_channell_prepare(&gps_channels[3]);
-  */
-  
 #if (ENABLE_CALC_POSITION)
   gps_pos_solve_init(gps_channels);
 #endif

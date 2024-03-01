@@ -61,13 +61,13 @@ uint8_t gps_summ16(uint16_t data)
 
 uint8_t gps_check_bit16(uint16_t* ptr, uint8_t pos)
 {
-	if (pos > 15)
-		return 0;
-
-	if (((*ptr) & (1 << pos)) != 0)
-		return 1;
-	else
-		return 0;
+  if (pos > 15)
+    return 0;
+  
+  if (((*ptr) & (1 << pos)) != 0)
+    return 1;
+  else
+    return 0;
 }
 
 void gps_mult8(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t length, uint16_t offset)
@@ -97,7 +97,9 @@ void gps_mult8_fast(uint8_t* src1_p, uint8_t* src2_p, uint8_t* dst_p, uint16_t l
   }
 }
 
-void gps_mult_iq8(uint8_t* src_i, uint8_t* src_q, uint8_t* src2, uint8_t* dst_i, uint8_t* dst_q, uint16_t length, uint16_t offset)
+void gps_mult_iq8(
+  uint8_t* src_i, uint8_t* src_q, uint8_t* src2, 
+  uint8_t* dst_i, uint8_t* dst_q, uint16_t length, uint16_t offset)
 {
   uint16_t pos = 0;
   
@@ -111,7 +113,8 @@ void gps_mult_iq8(uint8_t* src_i, uint8_t* src_q, uint8_t* src2, uint8_t* dst_i,
   }
 }
 
-void gps_mult_iq32(uint8_t* src_i, uint8_t* src_q, uint8_t* src2, uint8_t* dst_i, uint8_t* dst_q, uint16_t length, uint16_t offset)
+void gps_mult_iq32(uint8_t* src_i, uint8_t* src_q, 
+  uint8_t* src2, uint8_t* dst_i, uint8_t* dst_q, uint16_t length, uint16_t offset)
 {
   uint32_t* src2_p32 = (uint32_t*)src2;
   
@@ -131,7 +134,7 @@ void gps_mult_iq32(uint8_t* src_i, uint8_t* src_q, uint8_t* src2, uint8_t* dst_i
     src_q_p32++;
   }
   
-  //reset to start of buffer
+  //reset to the start of buffer
   src_i_p32 = (uint32_t*)(src_i);
   src_q_p32 = (uint32_t*)(src_q);
   
@@ -185,7 +188,7 @@ uint16_t gps_buff_summ16(uint16_t* data, uint16_t length)
   return cnt;
 }
 
-//length - data in bytes 
+// length - data in bytes 
 void gps_mult_and_summ(
   uint8_t* src_i, uint8_t* src_q, uint8_t* src2, 
   uint16_t* summ_i, uint16_t* summ_q, uint16_t length, uint16_t offset)
@@ -214,7 +217,7 @@ void gps_mult_and_summ(
     cnt_q += gps_summ_table16[tmp_q];
   }
   
-  //reset to start of buffer
+  //reset to the start of buffer
   src_i_p16 = (uint16_t*)(src_i + small_offset);
   src_q_p16 = (uint16_t*)(src_q + small_offset);
   
@@ -240,13 +243,13 @@ int16_t gps_correlation8(
   int16_t summ2;
   
   gps_mult_and_summ(
-                    (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
-                    (uint16_t*)&summ1, (uint16_t*)&summ2, 
-                    PRN_SPI_WORDS_CNT * 2, offset);
+    (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
+    (uint16_t*)&summ1, (uint16_t*)&summ2, 
+    PRN_SPI_WORDS_CNT * 2, offset);
+  
   summ1 = summ1 - BITS_IN_PRN / 2;
   summ2 = summ2 - BITS_IN_PRN / 2;
-  
-  
+ 
   if (summ1 < 0)
     summ1 = 0;
   if (summ2 < 0)
@@ -280,8 +283,8 @@ void gps_correlation_iq(
 }
 
 uint16_t correlation_search(
-	uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
-	uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
+  uint16_t* prn_p, uint16_t* data_i, uint16_t* data_q, 
+  uint16_t start_shift, uint16_t stop_shift,  uint16_t* aver_val, uint16_t* phase)
 {
   //uint32_t start_t = get_dwt_value();
   
@@ -311,7 +314,7 @@ uint16_t correlation_search(
   *phase = max_correl_pos;
   
   //uint32_t stop_t = get_dwt_value();
- // diff = stop_t - start_t;
+  // diff = stop_t - start_t;
   //diff = diff / 168;
   
   return max_correl_val;
@@ -337,8 +340,8 @@ void gps_shift_to_zero_freq(uint8_t* signal_data, uint8_t* data_i, uint8_t* data
   for (word_cnt = 0; word_cnt < (PRN_SPI_WORDS_CNT / 2); word_cnt++)//to get 32bit words
   {
     uint32_t phase = (accum >> 30);//upper 2 bits
-    *ptr_i32 = sin_buf32[phase] ^ *signal_p32;
-    *ptr_q32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_i32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_q32 = sin_buf32[phase] ^ *signal_p32;
     accum += acc_step;
     
     ptr_i32++;
@@ -368,8 +371,8 @@ void gps_shift_to_zero_freq_track(
   for (word_cnt = 0; word_cnt < (PRN_SPI_WORDS_CNT / 2); word_cnt++)//to get 32bit words
   {
     uint32_t phase = (accum >> 30);//upper 2 bits
-    *ptr_i32 = sin_buf32[phase] ^ *signal_p32;
-    *ptr_q32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_i32 = cos_buf32[phase] ^ *signal_p32;
+    *ptr_q32 = sin_buf32[phase] ^ *signal_p32;
     accum += acc_step;
     
     ptr_i32++;
@@ -494,8 +497,8 @@ uint32_t gps_generate_sin_cos(
   for (word_cnt = 0; word_cnt < (length / 2); word_cnt++)//to get 32bit words
   {
     uint32_t phase = (accum >> 30);//upper 2 bits
-    *ptr_i32 = sin_buf32[phase];
-    *ptr_q32 = cos_buf32[phase];
+    *ptr_i32 = cos_buf32[phase];
+    *ptr_q32 = sin_buf32[phase];
     accum += acc_step;
     
     ptr_i32++;

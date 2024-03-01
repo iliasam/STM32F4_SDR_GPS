@@ -9,13 +9,13 @@
 #include "config.h"
 #include <math.h>
 
-#define PLL_BAD_STATE_DETECTION_THRESHOLD		(80)
+#define PLL_BAD_STATE_DETECTION_THRESHOLD       (80)
 
 //In code steps
 #define GPS_PRE_TRACK_ZONE	        (24)
 #define GPS_PRE_TRACK_STEP	        (GPS_PRE_TRACK_ZONE / TRACKING_CH_LENGTH)
 
-//One byte is 8bit, one byte is 0.5 of PRN chip
+//One byte is 8 bit, one byte is 0.5 of PRN chip
 #define GPS_FINE_RATIO_F	(8.0f)
 #define GPS_FINE_RATIO		8
 
@@ -146,7 +146,7 @@ void gps_tracking_pll(gps_ch_t* channel, uint8_t index, int16_t IP, int16_t QP)
     freq_diff_rad = -M_PI - freq_diff_rad;
   
   float dt_s = 0.001f;
-  channel->tracking_data.if_freq_offset_hz += 
+  channel->tracking_data.if_freq_offset_hz -= 
     TRACKING_PLL1_C1 * (carr_phase_err_rad - channel->tracking_data.pll_code_err) +
       (TRACKING_PLL1_C2 * dt_s * carr_phase_err_rad) + 
         (TRACKING_FLL1 * dt_s * freq_diff_rad);
@@ -241,8 +241,9 @@ void gps_tracking_dll(gps_ch_t* channel, uint8_t index, int16_t IE, int16_t QE, 
   
   float dt_s = 0.001f;
   /* 2nd order DLL */
-  channel->tracking_data.code_phase_fine += (TRACKING_DLL1_C1 * (code_err - channel->tracking_data.dll_code_err) +
-                                              TRACKING_DLL1_C2 * dt_s * code_err);
+  channel->tracking_data.code_phase_fine += 
+    (TRACKING_DLL1_C1 * (code_err - channel->tracking_data.dll_code_err) +
+    TRACKING_DLL1_C2 * dt_s * code_err);
   
   if (channel->tracking_data.code_phase_fine < 0.0f)
   {

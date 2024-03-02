@@ -1,3 +1,5 @@
+//Based on RTKLIB
+
 #ifndef _RTCM_COMMON_H
 #define _RTCM_COMMON_H
 

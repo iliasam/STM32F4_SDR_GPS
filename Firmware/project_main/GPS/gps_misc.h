@@ -1,3 +1,5 @@
+//Based on RTKLIB
+
 #ifndef _GPS_MISC_H
 #define _GPS_MISC_H
 

@@ -1,3 +1,4 @@
+//Based on RTKLIB
 //Part of this code is taken from here: https://github.com/ndhuan/GPSRTK
 
 //Finding receiver position by observations (time+pseudoranges) and 

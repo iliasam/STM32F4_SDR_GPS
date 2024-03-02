@@ -1,3 +1,4 @@
+//Based on RTKLIB
 #ifndef _GPS_MISC_H
 #define _GPS_MISC_H
 
@@ -61,19 +62,19 @@ typedef struct
   float			if_freq_offset_hz;//doppler
   uint32_t		if_freq_accum;//NCO accumulator for keeping phase stable
   uint16_t		pre_track_phases[PRE_TRACK_POINTS_MAX_CNT];
-  uint8_t	        pre_track_count;
+  uint8_t	    pre_track_count;
   
   float			code_phase_fine;//1 step is (0.5chip / 8)
   
-  uint8_t	        debug_flag;
+  uint8_t	    debug_flag;
   
   float			dll_code_err;//Prev. code error, for filtering
   float			pll_code_err;//Prev. carrier phase error, for filtering, rad
-  int16_t	        fll_old_i;
-  int16_t	        fll_old_q;
+  int16_t	    fll_old_i;
+  int16_t	    fll_old_q;
   
-  int16_t	        pll_check_buf[TRACKING_CH_LENGTH];//For checking that PLL is in right lock
-  uint8_t	        pll_bad_state_cnt;//Couner of bad state detections
+  int16_t	    pll_check_buf[TRACKING_CH_LENGTH];//For checking that PLL is in right lock
+  uint8_t	    pll_bad_state_cnt;//Couner of bad state detections
   uint16_t		pll_bad_state_master_cnt;//Couner of bad state detections
   
   gps_tracking_state_t	state;
@@ -83,7 +84,7 @@ typedef struct
 {
   uint8_t			period_sync_ok_flag;
   uint8_t			right_period_cnt;
-  uint32_t		old_swap_time;//Perv time of sign sitch detection, PRN cunter ticks
+  uint32_t		    old_swap_time;//Perv time of sign sitch detection, PRN cunter ticks
   uint8_t			old_reminder;//Used for nav bit extraction
   
   uint8_t			last_bit_pos_cnt;
@@ -103,24 +104,24 @@ typedef struct
 } gps_nav_data_t;
 
 typedef struct {        /* time struct */
-  time_t time;        /* time (s) expressed by standard time_t */
-  double sec;         /* fraction of second under 1 s */
+  time_t time;          /* time (s) expressed by standard time_t */
+  double sec;           /* fraction of second under 1 s */
 } gtime_t;
 
 typedef struct {        /* GPS/QZS/GAL broadcast ephemeris type */
-  int sat;            /* satellite number */
-  int iode, iodc;      /* IODE,IODC */
-  int sva;            /* SV accuracy (URA index) */
-  int svh;            /* SV health (0:ok) */
-  int week;           /* GPS/QZS: gps week, GAL: galileo week */
-  int code;           /* GPS/QZS: code on L2, GAL/CMP: data sources */
-  int flag;           /* GPS/QZS: L2 P data flag, CMP: nav type */
+  int sat;              /* satellite number */
+  int iode, iodc;       /* IODE,IODC */
+  int sva;              /* SV accuracy (URA index) */
+  int svh;              /* SV health (0:ok) */
+  int week;             /* GPS/QZS: gps week, GAL: galileo week */
+  int code;             /* GPS/QZS: code on L2, GAL/CMP: data sources */
+  int flag;             /* GPS/QZS: L2 P data flag, CMP: nav type */
   gtime_t toe, toc, ttr; /* Toe,Toc,T_trans */
   /* SV orbit parameters */
   double A, e, i0, OMG0, omg, M0, deln, OMGd, idot;
   double crc, crs, cuc, cus, cic, cis;
-  double toes;        /* Toe (s) in week */
-  double fit;         /* fit interval (h) */
+  double toes;          /* Toe (s) in week */
+  double fit;           /* fit interval (h) */
   double f0, f1, f2;    /* SV clock parameters (af0,af1,af2) */
   double tgd[4];      /* group delay parameters */
   /* GPS/QZS:tgd[0]=TGD */
@@ -145,10 +146,10 @@ typedef struct {
 
 typedef struct
 {
-  gps_acq_t		acq_data;//Acq variables
+  gps_acq_t		    acq_data;//Acq variables
   gps_tracking_t	tracking_data;
-  gps_nav_data_t  nav_data;
-  sdreph_t		eph_data;
+  gps_nav_data_t    nav_data;
+  sdreph_t		    eph_data;
   uint8_t			prn; //Sat PRN code
   uint8_t			prn_code[PRN_LENGTH];//PRN data (0/1), generated at the start, 1023 bytes
 } gps_ch_t;

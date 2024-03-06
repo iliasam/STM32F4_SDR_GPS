@@ -23,7 +23,7 @@ User can enter Doppler frequency offset to make acquisition much faster.
   
 RF frontend pinout (See config.h):  
 #define SPI_CLK_PIN             GPIO_Pin_13 //MAX2769 - CLKOUT  
-#define SPI_MOSI_PIN            GPIO_Pin_15 //MAX2769 - I0  
+#define SPI_MOSI_PIN            GPIO_Pin_15 //MAX2769 - I1  
 Both - GPIOB  
 
   

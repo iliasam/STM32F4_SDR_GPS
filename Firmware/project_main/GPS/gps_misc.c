@@ -312,6 +312,8 @@ void gps_channell_prepare(gps_ch_t* channel)
 
 //Code is taken from https://github.com/taroz/GNSS-SDRLIB
 /* C/A code (IS-GPS-200) -----------------------------------------------------*/
+// dest - destinatioon array, 1023 bytes, will be filled with 0 or 1
+// prn - satellite ID number (PRN number), 1-32 for usual GPS sats.
 void gps_generate_prn(uint8_t* dest, int prn)
 {
   const static int16_t delay[] = { /* G2 delay (chips) */

@@ -6,7 +6,7 @@
 #include "delay_us_timer.h"
 #include "config.h"
 
-//SPI is working in 16-bit mode, slave, receive only
+//SPI is working in 16-bit mode, slave, receive only, LSB first
 //Data is written to the RAM using circular DMA
 //One 16-bit word is one GPS PRN "chip"
 

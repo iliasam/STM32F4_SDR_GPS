@@ -8,7 +8,9 @@ This is a demo project of STM32-based SDR GPS receiver.
 No additional factory/commercial "black box" GPS receiver is needed here - just connect MAX2769 to the STM32 MCU.  
 All "raw" GPS signal processing is done at the STM32.  
 Results of the GPS receiving are send to the UART:   
-<img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/photo_stm32a.jpg" width="500"> 
+<img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/Results.png" width="600">  
+That how receiver is looking:  
+<img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/photo_stm32a.jpg" width="500">  
   
 <img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/Structure_stm32.png" width="800">  
   

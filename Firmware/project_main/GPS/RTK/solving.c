@@ -336,7 +336,7 @@ double dot(const double *a, const double *b, int n)
   return c;
 }
 
-double norm(const double *a, int n)
+double norm_(const double *a, int n)
 {
   return sqrt(dot(a, a, n));
 }
@@ -628,7 +628,7 @@ extern double ionmodel(gtime_t t, const double *ion, const double *pos,
   int week;
   
   if (pos[2] < -1E3 || azel[1] <= 0) return 0.0;
-  if (norm(ion, 8) <= 0.0) ion = ion_default;
+  if (norm_(ion, 8) <= 0.0) ion = ion_default;
   
   /* earth centered angle (semi-circle) */
   psi = 0.0137 / (azel[1] / PI + 0.11) - 0.022;
@@ -1250,9 +1250,9 @@ double geodist(const double *rs, const double *rr, double *e)
   double r;
   int i;
   
-  if (norm(rs, 3) < RE_WGS84) return -1.0;
+  if (norm_(rs, 3) < RE_WGS84) return -1.0;
   for (i = 0;i < 3;i++) e[i] = rs[i] - rr[i];
-  r = norm(e, 3);
+  r = norm_(e, 3);
   for (i = 0;i < 3;i++) e[i] /= r;
   return r + OMGE * (rs[0] * rr[1] - rs[1] * rr[0]) / CLIGHT;
 }

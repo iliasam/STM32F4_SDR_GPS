@@ -105,7 +105,7 @@ int16_t gps_correlation8(
     (uint8_t*)data_i, (uint8_t*)data_q, (uint8_t*)prn_p, 
     (uint16_t*)&summ1, (uint16_t*)&summ2, 
     PRN_SPI_WORDS_CNT * 2, offset);
-  summ1 = summ1 - BITS_IN_PRN / 2;
+  summ1 = summ1 - BITS_IN_PRN / 2; //16368/2 //8184
   summ2 = summ2 - BITS_IN_PRN / 2;
  
   if (summ1 < 0)

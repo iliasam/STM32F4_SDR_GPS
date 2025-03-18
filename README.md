@@ -7,7 +7,7 @@ You can find same project for **ESP32** here: https://github.com/iliasam/ESP32_S
 This is a demo project of STM32-based SDR GPS receiver.  
 No additional factory/commercial "black box" GPS receiver is needed here - just connect MAX2769 (GNSS RF Frontend IC) to the STM32 MCU.  
 All "raw" GPS signal processing is done at the STM32.  
-Results of the GPS receiving are send to the UART:   
+Results of the GPS signal processing are send to the UART:   
 <img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/Results.png" width="600">  
 This is what the receiver looks like:  
 <img src="https://github.com/iliasam/STM32F4_SDR_GPS/blob/develop/Images/photo_stm32a.jpg" width="500">  
@@ -20,8 +20,8 @@ https://youtu.be/1hBnaDsQgMc
 Configured for STM32F4-DISCOVERY dev. board.  
 -Os optimization is used here  
 
-User set PRN codes of 4 satellites in code - before compiling FW.  
-User can enter Doppler frequency offset to make acquisition much faster.  
+User must set PRN codes of 4 satellites in the code - before compiling FW (I'm too lazy to create real CLI).  
+User can set Doppler frequency offsets in the code to make acquisition much faster.  
   
 RF frontend pinout (See config.h):  
 #define SPI_CLK_PIN             GPIO_Pin_13 //MAX2769 - CLKOUT  

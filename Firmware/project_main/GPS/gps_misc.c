@@ -213,8 +213,8 @@ void gps_shift_to_zero_freq(
 {
   // Suitable only when Fif is near Fsampling/4
   //This is Fsampling/4 waveform in binary, period is 4 bit
-  const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
-  const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
+  const uint32_t sin_buf32[4] = { 0x33333333, 0x99999999, 0xCCCCCCCC, 0x66666666 };
+  const uint32_t cos_buf32[4] = { 0x99999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
   
   uint32_t acc_step = (uint32_t)(freq_hz / (IF_NCO_STEP_HZ));
   uint64_t acc_step64 = (uint64_t)acc_step * 32;//we do 32steps per 1 word
@@ -244,8 +244,8 @@ void gps_shift_to_zero_freq(
 void gps_shift_to_zero_freq_track(
   gps_tracking_t* trk_channel, uint8_t* signal_data, uint8_t* data_i, uint8_t* data_q)
 {
-  const uint32_t sin_buf32[4] = { 0x33333333, 0x9999999, 0xCCCCCCCC, 0x66666666 };
-  const uint32_t cos_buf32[4] = { 0x9999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
+  const uint32_t sin_buf32[4] = { 0x33333333, 0x99999999, 0xCCCCCCCC, 0x66666666 };
+  const uint32_t cos_buf32[4] = { 0x99999999, 0xCCCCCCCC, 0x66666666, 0x33333333 };
   
   uint32_t acc_step = (uint32_t)(
     ((float)IF_FREQ_HZ + trk_channel->if_freq_offset_hz) / (IF_NCO_STEP_HZ));
